@@ -1,0 +1,25 @@
+// root tsconfig extended by others; this should never be used by `tsc`
+{
+	"extends": "@blake.regalia/tsconfig/tsconfig.node.json",
+
+	"compilerOptions": {
+		"baseUrl": ".",
+		"outDir": "dist",
+		"declarationDir": "dist",
+
+		"declaration": true,
+		"noImplicitReturns": false,
+
+		"allowJs": false,
+
+		"module": "ESNext"
+	},
+
+	"include": [
+		"src/**/*.ts",
+	],
+
+	"ts-node": {
+		"experimentalSpecifierResolution": "node"
+	},
+}

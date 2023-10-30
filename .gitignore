@@ -1,0 +1,25 @@
+/node_modules
+
+# build files
+/dist
+/build
+/gen
+/lib
+/proto
+
+# private
+**/*.env
+**/*.local
+
+# unwanted
+**/.DS_Store
+**/*.ignore
+**/*.log
+/.git-*
+.yarn-integrity
+
+# editor-specific files and directories
+**/.vscode/
+
+# sanctioned directory for anything that doesn't belong in git repo
+/scrap/
