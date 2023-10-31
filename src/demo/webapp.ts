@@ -1,6 +1,6 @@
 import {buffer_to_hex, hex_to_buffer} from '@blake.regalia/belt';
 
-import {wasm_secp256k1} from './api/secp256k1';
+import {wasm_secp256k1} from '../api/secp256k1';
 
 const d_res = await fetch('secp256k1.wasm');
 const k_secp = await wasm_secp256k1(d_res);

@@ -27,21 +27,22 @@ export interface WasmExportsExtension extends WasmExports {
 	context_create: Function;
 	ec_pubkey_parse: Function;
 	ec_pubkey_serialize: Function;
+	ecdsa_signature_parse_compact: Function;
+	ecdsa_signature_serialize_compact: Function;
 	ecdsa_verify: Function;
+	ecdsa_sign: Function;
 	ec_seckey_verify: Function;
 	ec_pubkey_create: Function;
 	context_randomize: Function;
 	ecdh: Function;
-	ecdsa_recoverable_signature_serialize_compact: Function;
-	ecdsa_sign_recoverable: Function;
 }
 
 export const map_wasm_imports = (g_imports: WasmImportsExtension) => ({
 	a: {
 		a: g_imports.abort,
-		e: g_imports.memcpy,
+		f: g_imports.memcpy,
 		d: g_imports.resize,
-		f: () => 52,  // _fd_close,
+		e: () => 52,  // _fd_close,
 		c: () => 70,  // _fd_seek,
 		b: g_imports.write,
 	},
@@ -55,13 +56,14 @@ export const map_wasm_exports = <
 	context_create: g_exports['l'],
 	ec_pubkey_parse: g_exports['m'],
 	ec_pubkey_serialize: g_exports['n'],
-	ecdsa_verify: g_exports['o'],
-	ec_seckey_verify: g_exports['p'],
-	ec_pubkey_create: g_exports['q'],
-	context_randomize: g_exports['r'],
-	ecdh: g_exports['s'],
-	ecdsa_recoverable_signature_serialize_compact: g_exports['t'],
-	ecdsa_sign_recoverable: g_exports['u'],
+	ecdsa_signature_parse_compact: g_exports['o'],
+	ecdsa_signature_serialize_compact: g_exports['p'],
+	ecdsa_verify: g_exports['q'],
+	ecdsa_sign: g_exports['r'],
+	ec_seckey_verify: g_exports['s'],
+	ec_pubkey_create: g_exports['t'],
+	context_randomize: g_exports['u'],
+	ecdh: g_exports['v'],
 	sbrk: g_exports['sbrk'],
 	memory: g_exports['g'],
 
