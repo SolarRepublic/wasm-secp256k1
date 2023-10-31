@@ -1,66 +1,28 @@
+import type {PointerNonceFn, PointerPubkey, PointerSeed, PointerSig, Secp256k1WasmCore, Secp256k1WasmEcdh, Secp256k1WasmEcdsaRaw} from './secp256k1-types.js';
 import type {ByteSize, Pointer} from '../types.js';
 
 import type {Promisable} from '@blake.regalia/belt';
 
-import {buffer, dataview} from '@blake.regalia/belt';
+import {buffer} from '@blake.regalia/belt';
 
 import {emsimp} from './emsimp.js';
+import {BinaryResult, ByteLens, Flags} from './secp256k1-types.js';
 import {map_wasm_exports, map_wasm_imports} from '../gen/wasm.js';
 
-/* eslint-disable @typescript-eslint/no-duplicate-enum-values */
-const enum ByteLens {
-	PRIVATE_KEY = 32,
-	EXTRA_ENTROPY = 32,
-	PUBLIC_KEY_COMPRESSED = 33,
-	PUBLIC_KEY_LIB = 64,  // secp256k1_pubkey: char [64];
-	PUBLIC_KEY_UNCOMPRESSED = 65,
-	PUBLIC_KEY_MAX = 65,
-	ECDH_SHARED_SK = 32,
-	ECDSA_SIG_COMPACT = 64,
-	ECDSA_SIG_LIB = 64,  // secp256k1_ecdsa_signature: char [64];
-	ECDSA_SIG_RECOVERABLE = 65,
-	ECDSA_SIG_MAX = 72,
-	MSG_HASH = 32,
-	RANDOM_SEED = 32,
-}
 
-// ##### From secp256k1.h: #####
-// /* All flags' lower 8 bits indicate what they're for. Do not use directly. */
-// #define SECP256K1_FLAGS_TYPE_MASK ((1 << 8) - 1)
-// #define SECP256K1_FLAGS_TYPE_CONTEXT (1 << 0)
-// #define SECP256K1_FLAGS_TYPE_COMPRESSION (1 << 1)
-// /* The higher bits contain the actual data. Do not use directly. */
-// #define SECP256K1_FLAGS_BIT_CONTEXT_VERIFY (1 << 8)
-// #define SECP256K1_FLAGS_BIT_CONTEXT_SIGN (1 << 9)
-// #define SECP256K1_FLAGS_BIT_CONTEXT_DECLASSIFY (1 << 10)
-// #define SECP256K1_FLAGS_BIT_COMPRESSION (1 << 8)
+const S_TAG_ECDH = 'ECDH: ';
+const S_TAG_ECDSA_VERIFY = 'ECDSA verify: ';
 
-/* eslint-disable @typescript-eslint/prefer-literal-enum-member, no-multi-spaces */
-const enum Flags {
-	CONTEXT_NONE        = (1 << 0) | 0,
-	CONTEXT_VERIFY      = (1 << 0) | (1 << 8),
-	CONTEXT_SIGN        = (1 << 0) | (1 << 9),
-	CONTEXT_DECLASSIFY  = (1 << 0) | (1 << 10),
+const S_REASON_INVALID_SK = 'Invalid private key';
+const S_REASON_INVALID_PK = 'Invalid public key';
 
-	COMPRESSION_UNCOMPRESSED  = (1 << 1) | 0,
-	COMPRESSION_COMPRESSED    = (1 << 1) | (1 << 8),
-}
-/* eslint-enable */
 
-const S_TAG_ECDH_FAIL = 'ECDH failed: Invalid ';
+const random_32 = () => crypto.getRandomValues(buffer(32));
 
 /**
  * Wrapper instance providing operations backed by libsecp256k1 WASM module
  */
 export interface Secp256k1 {
-	/**
-	 * ECDH key exchange
-	 * @param atu8_sk - the private key (32 bytes)
-	 * @param atu8_pk - the public key (33 or 65 bytes)
-	 * @returns the shared secret (32 bytes)
-	 */
-	ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array;
-
 	/**
 	 * Computes the public key for a given private key
 	 * @param atu8_sk - the private key (32 bytes)
@@ -68,6 +30,31 @@ export interface Secp256k1 {
 	 * @returns the public key (compressed to 33 bytes by default, or 65 if uncompressed)
 	 */
 	sk_to_pk(atu8_sk: Uint8Array, b_uncompressed?: boolean): Uint8Array;
+
+	/**
+	 * Signs the given message hash using the given private key.
+	 * @param atu8_sk - the private key
+	 * @param atu8_hash - the message hash (32 bytes)
+	 * @param atu8_entropy - optional entropy to use
+	 * @returns compact signature (64 bytes) as concatenation of `r || s`
+	 */
+	sign(atu8_sk: Uint8Array, atu8_hash: Uint8Array, atu8_ent?: Uint8Array): Uint8Array;
+
+	/**
+	 * Verifies the signature is valid for the given message hash and public key
+	 * @param atu8_signature - compact signature in `r || s` form (64 bytes)
+	 * @param atu8_msg - the message hash (32 bytes)
+	 * @param atu8_pk - the public key
+	 */
+	verify(atu8_signature: Uint8Array, atu8_hash: Uint8Array, atu8_pk: Uint8Array): boolean;
+
+	/**
+	 * ECDH key exchange. Computes a shared secret given a private key some public key
+	 * @param atu8_sk - the private key (32 bytes)
+	 * @param atu8_pk - the public key (33 or 65 bytes)
+	 * @returns the shared secret (32 bytes)
+	 */
+	ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array;
 }
 
 /**
@@ -81,23 +68,36 @@ export const wasm_secp256k1 = async(dp_res: Promisable<Response>): Promise<Secp2
 	const d_wasm = await WebAssembly.instantiateStreaming(dp_res, g_imports);
 
 	// create the libsecp256k1 exports struct
-	const g_wasm = map_wasm_exports(d_wasm.instance.exports);
+	const g_wasm = map_wasm_exports<Secp256k1WasmCore & Secp256k1WasmEcdh & Secp256k1WasmEcdsaRaw>(d_wasm.instance.exports);
 
 	// bind the heap and ref its view(s)
-	const [AB_HEAP, ATU8_HEAP, ATU32] = f_bind_heap(g_wasm.memory);
-	const DV_HEAP = dataview(AB_HEAP);
+	const [, ATU8_HEAP, ATU32_HEAP] = f_bind_heap(g_wasm.memory);
 
 	// call into the wasm module's init method
 	g_wasm.init();
 
-
-	// mallocs
+	// ref malloc function
 	const malloc = g_wasm.malloc;
 
 	const ip_sk = malloc(ByteLens.PRIVATE_KEY);
-	const ip_pk_lib = malloc(ByteLens.PUBLIC_KEY_LIB);
-	const ip_pk_scratch = malloc(ByteLens.PUBLIC_KEY_MAX);
+	const ip_ent = malloc(ByteLens.NONCE_ENTROPY);
+	const ip_seed = malloc<PointerSeed>(ByteLens.RANDOM_SEED);
 	const ip_sk_shared = malloc(ByteLens.ECDH_SHARED_SK);
+	const ip_msg_hash = malloc(ByteLens.MSG_HASH);
+	// const ip_recovery_id = malloc(ByteLens.RECOVERY_UINT32);
+
+	// scratch spaces
+	const ip_sig_scratch = malloc(ByteLens.ECDSA_SIG_COMPACT);
+	const ip_pk_scratch = malloc(ByteLens.PUBLIC_KEY_MAX);
+
+	// library handle: secp256k1_pubkey
+	const ip_pk_lib = malloc<PointerPubkey>(ByteLens.PUBLIC_KEY_LIB);
+
+	// library handle: secp256k1_ecdsa_signature
+	const ip_sig_lib = malloc<PointerSig>(ByteLens.ECDSA_SIG_LIB);
+
+	// // library handle: secp256k1_ecdsa_recoverable_signature
+	// const ip_sig_recoverable_lib = malloc<PointerSigRecoverable>(ByteLens.ECDSA_SIG_RECOVERABLE_LIB);
 
 	// create a reusable context
 	const ip_ctx = g_wasm.context_create(Flags.CONTEXT_SIGN | Flags.CONTEXT_VERIFY);
@@ -107,32 +107,56 @@ export const wasm_secp256k1 = async(dp_res: Promisable<Response>): Promise<Secp2
 	const ip32_len = ip_len >> 2;
 
 
+
 	/**
 	 * Pads the given input data before copying it into the heap at the given location; throws if input
 	 * data exceeds expected size
+	 * @param atu8_data - the data to put into program memory
+	 * @param ib_write - the starting byte position to write into
+	 * @param nb_size - the size of the region
 	 */
-	const put_bytes = (atu8_data: Uint8Array, ib_write: Pointer, nb_size: ByteSize) => {
+	const put_bytes = (atu8_data: Uint8Array, ip_write: Pointer, nb_size: ByteSize) => {
 		const atu8_buffer = buffer(nb_size);
 		atu8_buffer.set(atu8_data);
-		ATU8_HEAP.set(atu8_buffer, ib_write);
+		ATU8_HEAP.set(atu8_buffer, ip_write);
+	};
+
+	/**
+	 * Randomizes the context for better protection against CPU side-channel attacks
+	 */
+	const randomize_context = () => {
+		// put random seed bytes into place
+		put_bytes(random_32(), ip_seed, ByteLens.RANDOM_SEED);
+
+		// randomize context
+		if(BinaryResult.SUCCESS !== g_wasm.context_randomize(ip_ctx, ip_seed)) {
+			throw Error('Failed to randomize context');
+		}
 	};
 
 	/**
 	 * Parses the input public key in preparation for use by some method
+	 * @param atu8_sk - the private key
+	 * @returns `true` on success, `false` otherwise
 	 */
 	const parse_pubkey = (atu8_pk: Uint8Array): boolean => {
 		// copy input bytes into place
 		put_bytes(atu8_pk, ip_pk_scratch, ByteLens.PUBLIC_KEY_MAX);
 
-		// parse public key. from the docs:
-		// *  Returns: 1 if the public key was fully valid.
-		// *           0 if the public key could not be parsed or is invalid.
-		return 1 === g_wasm.ec_pubkey_parse(ip_ctx, ip_pk_lib, ip_pk_scratch, atu8_pk.length);
+		// parse public key
+		return BinaryResult.SUCCESS === g_wasm.ec_pubkey_parse(ip_ctx, ip_pk_lib, ip_pk_scratch, atu8_pk.length);
 	};
 
+	/**
+	 * Puts the given private key into program memory, runs the given callback, then zeroes out the key
+	 * @param atu8_sk - the private key
+	 * @param f_use - callback to use the key
+	 * @returns whatever the callback returns
+	 */
 	const with_sk = <
 		w_return,
 	>(atu8_sk: Uint8Array, f_use: () => w_return) => {
+		// prep callback return
 		let w_return: w_return;
 
 		// in case of any exception..
@@ -148,48 +172,113 @@ export const wasm_secp256k1 = async(dp_res: Promisable<Response>): Promise<Secp2
 			ATU8_HEAP.fill(0, ip_sk, ip_sk+ByteLens.PRIVATE_KEY);
 		}
 
+		// forward result
 		return w_return;
 	};
 
-	const get_pk = (b_uncompressed=false) => {
+	/**
+	 * Serializes the public key
+	 * @param b_uncompressed - whether or not the result should be in compressed form (33 bytes) or not (65 bytes)
+	 * @returns the public key as a buffer
+	 */
+	const get_pk = (b_uncompressed=false): Uint8Array => {
+		// output length of public key
 		const nb_pk = b_uncompressed? ByteLens.PUBLIC_KEY_UNCOMPRESSED: ByteLens.PUBLIC_KEY_COMPRESSED;
 
-		DV_HEAP.setUint32(ip_len, nb_pk);
-		// ATU32.se [ip32_len] = b_uncompressed? ByteLens.PUBLIC_KEY_UNCOMPRESSED: ByteLens.PUBLIC_KEY_COMPRESSED;
+		// // set target output length in little endian for WASM runtime
+		// DV_HEAP.setUint32(ip_len, nb_pk, true);
 
-		g_wasm.ec_pubkey_serialize(ip_ctx, ip_pk_scratch, ip_len, ip_pk_lib, nb_pk);
+		// set target output length (the Web has basically become LE-only)
+		ATU32_HEAP[ip32_len] = nb_pk;
 
-		return ATU8_HEAP.slice(ip_pk_scratch, nb_pk);
+		// prep compression flag
+		const xm_compression = b_uncompressed? Flags.COMPRESSION_UNCOMPRESSED: Flags.COMPRESSION_COMPRESSED;
+
+		// serialize public key
+		g_wasm.ec_pubkey_serialize(ip_ctx, ip_pk_scratch, ip_len, ip_pk_lib, xm_compression);
+
+		// extract result
+		return ATU8_HEAP.slice(ip_pk_scratch, ip_pk_scratch+nb_pk);
 	};
 
 	return {
-		ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array {
+		sk_to_pk(atu8_sk, b_uncompressed=false) {
+			// randomize context
+			randomize_context();
+
+			// while using the private key, compute its corresponding public key; from the docs:
+			if(BinaryResult.SUCCESS !== with_sk(atu8_sk, () => g_wasm.ec_pubkey_create(ip_ctx, ip_pk_lib, ip_sk))) {
+				throw Error('sk_to_pk: '+S_REASON_INVALID_SK);
+			}
+
+			// serialize the public key
+			return get_pk(b_uncompressed);
+		},
+
+		sign(atu8_sk, atu8_hash, atu8_ent=random_32()) {
+			// randomize context
+			randomize_context();
+
+			// copy message hash bytes into place
+			put_bytes(atu8_hash, ip_msg_hash, ByteLens.MSG_HASH);
+
+			// copy entropy bytes into place
+			put_bytes(atu8_ent, ip_ent, ByteLens.NONCE_ENTROPY);
+
+			// while using the private key, sign the given message hash
+			if(BinaryResult.SUCCESS !== with_sk(atu8_sk, () => g_wasm.ecdsa_sign(
+				ip_ctx,
+				ip_sig_lib,
+				ip_msg_hash,
+				ip_sk,
+				0 as PointerNonceFn,
+				ip_ent
+			))) {
+				throw Error('ECDSA sign: '+S_REASON_INVALID_SK);
+			}
+
+			// serialize the signature in compact form as `r || s` (64 bytes)
+			g_wasm.ecdsa_signature_serialize_compact(ip_ctx, ip_sig_scratch, ip_sig_lib);
+
+			// return serialized signature
+			return ATU8_HEAP.slice(ip_sig_scratch, ip_sig_scratch+ByteLens.ECDSA_SIG_COMPACT);
+		},
+
+		verify(atu8_signature, atu8_hash, atu8_pk) {
+			// copy signature bytes into place
+			put_bytes(atu8_signature, ip_sig_scratch, ByteLens.ECDSA_SIG_COMPACT);
+
+			// copy message hash bytes into place
+			put_bytes(atu8_hash, ip_msg_hash, ByteLens.MSG_HASH);
+
+			// parse the public key
+			if(!parse_pubkey(atu8_pk)) {
+				throw Error(S_TAG_ECDSA_VERIFY+S_REASON_INVALID_PK);
+			}
+
+			// parse the signature
+			if(BinaryResult.SUCCESS !== g_wasm.ecdsa_signature_parse_compact(ip_ctx, ip_sig_lib, ip_sig_scratch)) {
+				throw Error(S_TAG_ECDSA_VERIFY+'Unparseable signature');
+			}
+
+			// verify the signature
+			return BinaryResult.SUCCESS === g_wasm.ecdsa_verify(ip_ctx, ip_sig_lib, ip_msg_hash, ip_pk_lib);
+		},
+
+		ecdh(atu8_sk, atu8_pk) {
 			// parse public key
-			if(!parse_pubkey(atu8_pk)) throw Error(S_TAG_ECDH_FAIL+'public key');
+			if(!parse_pubkey(atu8_pk)) throw Error(S_TAG_ECDH+S_REASON_INVALID_PK);
 
 			// start using private key
 			return with_sk(atu8_sk, () => {
-				// from the docs:
-				// *  Returns: 1: exponentiation was successful
-				// *           0: scalar was invalid (zero or overflow) or hashfp returned 0
-				if(1 !== g_wasm.ecdh(ip_ctx, ip_sk_shared, ip_pk_lib, ip_sk)) {
-					throw Error(S_TAG_ECDH_FAIL+'private key');
+				// perform ecdh computation
+				if(BinaryResult.SUCCESS !== g_wasm.ecdh(ip_ctx, ip_sk_shared, ip_pk_lib, ip_sk)) {
+					throw Error(S_TAG_ECDH+S_REASON_INVALID_SK);
 				}
 
 				// return copy of result bytes
-				return ATU8_HEAP.slice(ip_sk_shared, ByteLens.ECDH_SHARED_SK);
+				return ATU8_HEAP.slice(ip_sk_shared, ip_sk_shared+ByteLens.ECDH_SHARED_SK);
 			});
-		},
-
-		sk_to_pk(atu8_sk: Uint8Array, b_uncompressed=false): Uint8Array {
-			// start using private key; from the docs:
-			// *  Returns: 1: secret was valid, public key stores.
-			// *           0: secret was invalid, try again.
-			if(1 !== with_sk(atu8_sk, () => g_wasm.ec_pubkey_create(ip_ctx, ip_pk_lib, ip_sk))) {
-				throw Error('sk_to_pk: Invalid private key');
-			}
-
-			return get_pk(b_uncompressed);
 		},
 	};
 };

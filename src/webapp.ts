@@ -11,14 +11,14 @@ const atu8_pk = k_secp.sk_to_pk(atu8_sk);
 
 console.log(`pubkey: ${buffer_to_hex(atu8_pk)}`);
 
-// const atu8_pk = hex_to_buffer('03f7f143dd09cb194fb07f07c524646a941b7f03425728f54cb124aa23768218da');
+const atu8_pk_other = hex_to_buffer('03f7f143dd09cb194fb07f07c524646a941b7f03425728f54cb124aa23768218da');
 
-// const atu8_shared = k_secp.ecdh(atu8_sk, atu8_pk);
-// const sb16_shared = buffer_to_hex(atu8_shared);
+const atu8_shared = k_secp.ecdh(atu8_sk, atu8_pk_other);
+const sb16_shared = buffer_to_hex(atu8_shared);
 
-// const sb16_expect = '03f852cd3aea28f579544ab3a4cf4e043ff453c77dbebe09cafe66ecd9c767592a';
+const sb16_expect = '03f852cd3aea28f579544ab3a4cf4e043ff453c77dbebe09cafe66ecd9c767592a';
 
-// console.log(sb16_shared);
-// console.log(sb16_expect);
+console.log(sb16_shared);
+console.log(sb16_expect);
 
-// console.log(sb16_expect === sb16_shared);
+console.log(sb16_expect === sb16_shared);

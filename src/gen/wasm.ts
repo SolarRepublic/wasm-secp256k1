@@ -16,10 +16,24 @@ import type {
 	FileDescriptor,
 	SeekWhence,
 	WasmImports,
+	WasmExports,
 } from '../types.js';
 
 export interface WasmImportsExtension extends WasmImports {
 	
+}
+
+export interface WasmExportsExtension extends WasmExports {
+	context_create: Function;
+	ec_pubkey_parse: Function;
+	ec_pubkey_serialize: Function;
+	ecdsa_verify: Function;
+	ec_seckey_verify: Function;
+	ec_pubkey_create: Function;
+	context_randomize: Function;
+	ecdh: Function;
+	ecdsa_recoverable_signature_serialize_compact: Function;
+	ecdsa_sign_recoverable: Function;
 }
 
 export const map_wasm_imports = (g_imports: WasmImportsExtension) => ({
@@ -33,21 +47,24 @@ export const map_wasm_imports = (g_imports: WasmImportsExtension) => ({
 	},
 });
 
-export const map_wasm_exports = (g_exports: WebAssembly.Exports) => ({
-	malloc: g_exports['i'] as (nb_size: ByteSize) => Pointer,
-	free: g_exports['j'] as (ip_ptr: Pointer) => void,
-	context_create: g_exports['l'] as Function,
-	ec_pubkey_parse: g_exports['m'] as Function,
-	ec_pubkey_serialize: g_exports['n'] as Function,
-	ecdsa_signature_serialize_compact: g_exports['o'] as Function,
-	ecdsa_verify: g_exports['p'] as Function,
-	ecdsa_sign: g_exports['q'] as Function,
-	ec_seckey_verify: g_exports['r'] as Function,
-	ec_pubkey_create: g_exports['s'] as Function,
-	ecdh: g_exports['t'] as Function,
-	sbrk: g_exports['sbrk'] as (nb_change: ByteDelta) => Pointer,
-	memory: g_exports['g'] as WebAssembly.Memory,
+export const map_wasm_exports = <
+	g_extension extends WasmExportsExtension=WasmExportsExtension,
+>(g_exports: WebAssembly.Exports): g_extension => ({
+	malloc: g_exports['i'],
+	free: g_exports['j'],
+	context_create: g_exports['l'],
+	ec_pubkey_parse: g_exports['m'],
+	ec_pubkey_serialize: g_exports['n'],
+	ecdsa_verify: g_exports['o'],
+	ec_seckey_verify: g_exports['p'],
+	ec_pubkey_create: g_exports['q'],
+	context_randomize: g_exports['r'],
+	ecdh: g_exports['s'],
+	ecdsa_recoverable_signature_serialize_compact: g_exports['t'],
+	ecdsa_sign_recoverable: g_exports['u'],
+	sbrk: g_exports['sbrk'],
+	memory: g_exports['g'],
 
 	init: () => (g_exports['h'] as VoidFunction)(),
-});
+} as g_extension);
 
