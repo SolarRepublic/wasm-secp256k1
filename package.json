@@ -11,7 +11,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf build",
-    "build:wasm-bin": "docker build -f secp256k1.Dockerfile . -t wasm-secp256k1 && docker run -it -v $(pwd)/public:/out wasm-secp256k1",
+    "build:wasm-bin": "docker build -f secp256k1.Dockerfile . -t wasm-secp256k1 && docker run --rm -v $(pwd)/public:/out wasm-secp256k1",
     "build:wasm-ts": "bun run ./src/generate.ts public/secp256k1.js > ./src/gen/wasm.ts",
     "build:wasm": "bun run build:wasm-bin && bun run build:wasm-ts",
     "build": "bun run build:wasm && tsc",
