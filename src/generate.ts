@@ -6,7 +6,14 @@ import {oderac, type Dict, __UNDEFINED} from '@blake.regalia/belt';
 
 import * as acorn from 'acorn';
 
-const sx_js = readFileSync('./submodules/libscrap/out/secp256k1.js', 'utf-8');
+const sr_file = process.argv[2];
+
+if(!sr_file) {
+	console.error('Usage: generate.ts <WASM_JS_FILE>');
+	process.exit(1);
+}
+
+const sx_js = readFileSync(sr_file, 'utf-8');
 
 const yn_root = acorn.parse(sx_js, {
 	ecmaVersion: 'latest',

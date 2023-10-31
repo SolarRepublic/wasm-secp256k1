@@ -53,7 +53,7 @@ export const emsimp = (f_map_imports: ImportMapper, s_tag: string) => {
 				const nb_len = ATU32_HEAP[ip_iov + 4 >> 2];
 
 				// next iov
-				ip_iov += 8;
+				(ip_iov as number) += 8;
 
 				// extract text from buffer
 				s_out += buffer_to_text(ATU8_HEAP.subarray(ip_start, ip_start+nb_len));
