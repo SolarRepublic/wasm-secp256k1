@@ -7,8 +7,7 @@ join() {
 	echo -n "${s_list/$'\n'/}" | tr '\n' "$s_delim" | sed "s/$s_delim$//"
 }
 
-b_recovery=1
-
+# list of functions to export
 s_exports='''
 "_malloc"
 "_free"
@@ -19,26 +18,13 @@ s_exports='''
 "_secp256k1_ec_pubkey_parse"
 "_secp256k1_ec_pubkey_serialize"
 "_secp256k1_ecdh"
-"_secp256k1_signature_parse_compact"
-"_secp256k1_signature_serialize_compact"
+"_secp256k1_ecdsa_signature_parse_compact"
+"_secp256k1_ecdsa_signature_serialize_compact"
 "_secp256k1_ecdsa_sign"
 "_secp256k1_ecdsa_verify"
 '''
 
-append_export() {
-	s_append="$1"
-	s_exports+="$s_append"$'\n'
-}
-
-if [[ $b_recovery -eq 1 ]]; then
-	append_export '"_secp256k1_ecdsa_sign_recoverable"'
-	append_export '"_secp256k1_ecdsa_recoverable_signature_serialize_compact"'
-else
-	append_export '"_secp256k1_ecdsa_sign"'
-	append_export '"_secp256k1_ecdsa_signature_serialize_compact"'
-fi
-
-
+# join list to string
 sx_funcs=$(join "$s_exports" ',')
 
 # clean
@@ -46,6 +32,9 @@ emmake make clean
 
 # workaround for <https://github.com/emscripten-core/emscripten/issues/13551>
 echo '{"type":"commonjs"}' > package.json
+
+# autogen
+./autogen.sh
 
 # configure
 emconfigure ./configure \
@@ -79,3 +68,6 @@ emcc src/precompute_ecmult-precompute_ecmult.o \
   -s MINIMAL_RUNTIME=1 \
   -s NO_EXIT_RUNTIME=1 \
   -o out/secp256k1.js
+
+# verify
+ls -lah out/

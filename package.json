@@ -11,7 +11,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf build",
-    "build:wasm": "docker build -f secp256k1.Dockerfile . -t wasm-secp256k1 && docker run -it --mount type=bind,src=$(pwd)/public,dst=/app/out,consistency=delegated wasm-secp256k1",
+    "build:wasm": "docker build -f secp256k1.Dockerfile . -t wasm-secp256k1 && docker run -it -v $(pwd)/public:/out wasm-secp256k1",
     "gen": "bun run ./src/gen.ts > ./src/gen/wasm.ts"
   },
   "dependencies": {},

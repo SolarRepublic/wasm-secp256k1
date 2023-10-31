@@ -14,4 +14,4 @@ WORKDIR /app
 RUN ./compile.sh
 
 # copy outputs to mounted volume
-CMD ["cp", "-r", "/app/out", "/out"]
+CMD ["cp", "-r", "/app/out/*", "/out"]

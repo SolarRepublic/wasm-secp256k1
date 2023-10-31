@@ -59,6 +59,8 @@ export interface Secp256k1 {
 
 /**
  * Creates a new instance of the secp256k1 WASM and returns its ES wrapper
+ * @param dp_res - a Response containing the WASM binary, or a Promise that resolves to one
+ * @returns the wrapper API
  */
 export const wasm_secp256k1 = async(dp_res: Promisable<Response>): Promise<Secp256k1> => {
 	// prepare the runtime
