@@ -1,7 +1,7 @@
 {
   "name": "@solar-republic/wasm-secp256k1",
   "description": "TypeScript wrapper and Web Assembly module of the libsecp256k1 C library",
-  "version": "0.0.4-alpha.3",
+  "version": "0.1.0-alpha.0",
   "type": "module",
   "main": "build/dist/main.js",
   "files": [
@@ -22,17 +22,12 @@
     "@blake.regalia/belt": "^0.21.0",
     "@blake.regalia/eslint-config-elite": "^0.3.3",
     "@blake.regalia/tsconfig": "^0.1.2",
-    "@solar-republic/neutrino": "^0.9.8",
-    "@types/node": "^20.8.9",
+    "@types/node": "^20.8.10",
     "@types/web": "^0.0.119",
-    "@typescript-eslint/parser": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.1",
     "acorn": "^8.11.2",
     "eslint": "^8.52.0",
     "eslint-plugin-unused-imports": "^3.0.0",
-    "estree-walker": "^3.0.3",
-    "ts-node": "^10.9.1",
-    "ts-toolbelt": "^9.6.0",
-    "tsc-esm-fix": "^2.20.17",
     "typescript": "^5.2.2",
     "vite": "^4.5.0"
   }
