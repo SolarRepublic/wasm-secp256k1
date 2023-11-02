@@ -119,6 +119,10 @@ Caller is responsible for zero-ing out private keys in the Typed Arrays it passe
 
 ## Is libsecp256k1 modified?
 
-No, it's used as a submodule from upstream.
+The library is imported as a git submodule directly from upstream.
 
+However, there is one modification made by default to `hash_impl.h` and `hash.h` to make the sha256 hashing functions external. This makes it so that they can be used from JS environment to provide a synchronous hash function, which can be useful in certain contexts where developers would otherwise be relegated to Web Crypto's async API.
 
+You can review the changes made [here](./blob/main/scripts/compile.sh#L81-L82). It simply removes the `static` storage modifier and adds `external` in the include header to those three sha256 functions.
+
+If you don't want or disagree with those changes, you can omit the `--externalize-sha256` option passed to the compile script.

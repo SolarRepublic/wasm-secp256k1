@@ -241,12 +241,12 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@solar-republic/neutrino@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@solar-republic/neutrino/-/neutrino-0.10.0.tgz#be4c6329d8059e0e9dc0cea988f0d2ac20c54141"
-  integrity sha512-SEmL1jAVYwW3ZoyTm9cPS4Dh94aro6DJn4zGDDYRAukrJpxF3e9epPYGjOVBZcb+JtOhcpjfIZ+wgNVT+6S3Bw==
+"@solar-republic/neutrino@^0.9.8":
+  version "0.9.8"
+  resolved "https://registry.yarnpkg.com/@solar-republic/neutrino/-/neutrino-0.9.8.tgz#278bc036935f64c1d956f29445830497f4236f1f"
+  integrity sha512-Gu0kWx3J5TzxNOr9YcVGQGZdmGZtiNq81PZf+io6t2B2Vt4GsSl7kpt59ZComyGD1wEhFfa8msQe4nkoBfjjPA==
   dependencies:
-    "@blake.regalia/belt" "^0.21.0"
+    "@blake.regalia/belt" "^0.15.0"
 
 "@tsconfig/node10@^1.0.7":
   version "1.0.9"
