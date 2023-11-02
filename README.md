@@ -84,12 +84,12 @@ interface Secp256k1 {
     */
     ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array;
 
-	/**
-	 * Synchronous SHA-256 hash function
-	 * @param atu8_data - message to hash synchronously
-	 * @returns the message digest (32 bytes)
-	 */
-	sha256(atu8_data: Uint8Array): Uint8Array;
+    /**
+    * Synchronous SHA-256 hash function
+    * @param atu8_data - message to hash synchronously
+    * @returns the message digest (32 bytes)
+    */
+    sha256(atu8_data: Uint8Array): Uint8Array;
 }
 ```
 
