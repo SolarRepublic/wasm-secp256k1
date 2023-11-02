@@ -4,6 +4,27 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>wasm-secp256k1 Demo</title>
+	<style>
+		body {
+			background: #333;
+			color: white;
+			line-height: 20pt;
+			font-family: monospace;
+		}
+
+		input,textarea {
+			background: #555;
+			color: #f7f7f7;
+			border: 1px solid black;
+			padding: 4px;
+			font-family: monospace;
+		}
+
+		input[readonly] {
+			background: #444;
+			color: #bbb
+		}
+	</style>
 </head>
 <body>
 	<div id="app"></div>
@@ -12,6 +33,79 @@
 	<noscript>
 		JavaScript is required
 	</noscript>
+
+	<table>
+		<tr>
+			<td>
+				<label for="sk">Private key:</label>
+			</td>
+			<td>
+				<input type="text" size="68" id="sk" name="sk" spellcheck="false">
+			</td>
+			</td>
+		</tr>
+
+		<tr>
+			<td>
+				<label for="pk">Public key:</label>
+			</td>
+			<td>
+				<input type="text" size="68" id="pk" name="pk" readonly>
+			</td>
+			</td>
+		</tr>
+
+		<tr>
+			<td>
+				<label for="msg">Message:</label>
+			</td>
+			<td>
+				<textarea cols="40" rows="3" id="msg" name="msg" spellcheck="false">Hello world!</textarea>
+			</td>
+			</td>
+		</tr>
+
+		<tr>
+			<td>
+				<label for="hash">Hash:</label>
+			</td>
+			<td>
+				<input type="text" size="68" id="hash" name="hash" readonly>
+			</td>
+			</td>
+		</tr>
+
+		<tr>
+			<td>
+				<label for="sig">Signature R:</label>
+			</td>
+			<td>
+				<input type="text" size="68" id="sig_r" name="sig_r" readonly>
+			</td>
+			</td>
+		</tr>
+
+		<tr>
+			<td>
+				<label for="sig">Signature S:</label>
+			</td>
+			<td>
+				<input type="text" size="68" id="sig_s" name="sig_s" readonly>
+			</td>
+			</td>
+		</tr>
+
+		<tr>
+			<td>
+				<label for="verified">Verified:</label>
+			</td>
+			<td>
+				<input type="text" size="36" id="verified" name="verified" readonly>
+			</td>
+			</td>
+		</tr>
+	</table>
+
 </body>
 </html>
 
