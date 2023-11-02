@@ -36,18 +36,18 @@ export declare const WasmSecp256k1 = (dp_res: Promisable<Response>): Promise<Sec
  * Wrapper instance providing operations backed by libsecp256k1 WASM module
  */
 interface Secp256k1 {
-	/**
-	 * Generates a new private key using crypto secure random bytes and without modulo bias
-	 * @returns a new private key (32 bytes)
-	 */
-	gen_sk(): Uint8Array;
+    /**
+    * Generates a new private key using crypto secure random bytes and without modulo bias
+    * @returns a new private key (32 bytes)
+    */
+    gen_sk(): Uint8Array;
 
-	/**
-	 * Asserts that the given private key is valid, throws otherwise
-	 * @param atu8_sk - the private key (32 bytes)
-	 * @returns the same `Uint8Array`
-	 */
-	valid_sk(atu8_sk: Uint8Array): Uint8Array;
+    /**
+    * Asserts that the given private key is valid, throws otherwise
+    * @param atu8_sk - the private key (32 bytes)
+    * @returns the same `Uint8Array`
+    */
+    valid_sk(atu8_sk: Uint8Array): Uint8Array;
 
     /**
     * Computes the public key for a given private key
