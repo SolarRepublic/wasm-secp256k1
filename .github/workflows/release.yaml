@@ -33,6 +33,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          prerelease: true
           files: |
-            public/secp256k1.wasm
+            public/out/secp256k1.wasm

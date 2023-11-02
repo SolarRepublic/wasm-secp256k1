@@ -1,9 +1,9 @@
-import {buffer_to_hex, hex_to_buffer} from '@blake.regalia/belt';
+import {buffer_to_hex, hex_to_buffer, sha256, text_to_buffer} from '@blake.regalia/belt';
 
-import {wasm_secp256k1} from '../api/secp256k1';
+import {WasmSecp256k1} from '../api/secp256k1';
 
-const d_res = await fetch('secp256k1.wasm');
-const k_secp = await wasm_secp256k1(d_res);
+const d_res = await fetch('out/secp256k1.wasm');
+const k_secp = await WasmSecp256k1(d_res);
 
 const atu8_sk = hex_to_buffer('30fd578ae6857f09edc4567f1c8ba6039a088c978610551e19f8d31f455345ae');
 
@@ -22,3 +22,17 @@ console.log(sb16_shared);
 console.log(sb16_expect);
 
 console.log(sb16_expect === sb16_shared);
+
+
+
+const A_VECTORS = [
+	{
+		sk: hex_to_buffer('ebb2c082fd7727890a28ac82f6bdf97bad8de9f5d7c9028692de1a255cad3e0f'),
+		msg: await sha256(text_to_buffer('Test message')),
+	},
+	{
+		sk: hex_to_buffer('0000000000000000000000000000000000000000000000000000000000000002'),
+		msg: await sha256(text_to_buffer('Test message')),
+	},
+];
+

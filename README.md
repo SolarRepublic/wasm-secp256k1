@@ -12,7 +12,14 @@ This module offers *substantially* greater security than pure JavaScript impleme
 
 In addition to zero-ing out private keys after use, the wrapper also randomizes the lib context every time a public key is computed or a message is signed.
 
-Signature recovery is not currently enabled, but is easy to add. If you would like it, please open an issue.
+Signature recovery is not currently enabled, but is easy to add. If you meed it, please open an issue.
+
+
+## Install
+
+```sh
+npm install @solar-republic/wasm-secp256k1
+```
 
 
 ## API
@@ -23,12 +30,25 @@ Signature recovery is not currently enabled, but is easy to add. If you would li
  * @param dp_res - a Response containing the WASM binary, or a Promise that resolves to one
  * @returns the wrapper API
  */
-export declare const wasm_secp256k1 = (dp_res: Promisable<Response>): Promise<Secp256k1>;
+export declare const WasmSecp256k1 = (dp_res: Promisable<Response>): Promise<Secp256k1>;
 
 /**
  * Wrapper instance providing operations backed by libsecp256k1 WASM module
  */
 interface Secp256k1 {
+	/**
+	 * Generates a new private key using crypto secure random bytes and without modulo bias
+	 * @returns a new private key (32 bytes)
+	 */
+	gen_sk(): Uint8Array;
+
+	/**
+	 * Asserts that the given private key is valid, throws otherwise
+	 * @param atu8_sk - the private key (32 bytes)
+	 * @returns the same `Uint8Array`
+	 */
+	valid_sk(atu8_sk: Uint8Array): Uint8Array;
+
     /**
     * Computes the public key for a given private key
     * @param atu8_sk - the private key (32 bytes)
@@ -63,6 +83,38 @@ interface Secp256k1 {
     ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array;
 }
 ```
+
+
+## Example
+
+```ts
+import {WasmSecp256k1} from '@solar-republic/wasm-secp256k1';
+
+// instantiate WASM module
+const secp256k1 = WasmSecp256k1(await fetch('secp256k1.wasm'));
+
+
+// generate a random private key
+const sk = secp256k1.gen_sk()
+
+// get its corresponding public key
+const pk = secp256k1.sk_to_pk(sk);
+
+// sign a message hash (caller is responsible for actually hashing the message and providing entropy)
+const signed = secp256k1.sign(sk, messageHash, entropy);
+
+// verify a given message hash is signed by some public key
+const verified = secp256k1.verify(signed, messageHash, pk);
+
+// derive a shared secret with some other's public key
+const shared = secp256k1.ecdh(sk, otherPk);
+
+
+// zero out private key
+sk.fill(0, 0, 32);
+```
+
+Caller is responsible for zero-ing out private keys in the Typed Arrays it passes. Library only zeroes out the bytes in the copies it makes.
 
 
 ## Is libsecp256k1 modified?
