@@ -22,7 +22,7 @@
     "@blake.regalia/belt": "^0.21.0",
     "@blake.regalia/eslint-config-elite": "^0.3.3",
     "@blake.regalia/tsconfig": "^0.1.2",
-    "@solar-republic/neutrino": "^0.10.0",
+    "@solar-republic/neutrino": "^0.9.8",
     "@types/node": "^20.8.9",
     "@types/web": "^0.0.119",
     "@typescript-eslint/parser": "^6.9.0",

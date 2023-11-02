@@ -8,6 +8,8 @@ export type PointerSig = Pointer<'ecdsa_signature'>;
 export type PointerSigRecoverable = Pointer<'ecdsa_recoverable_signature'>;
 export type PointerNonceFn = Pointer<'nonce_function'>;
 
+export type PointerSha256 = Pointer<'sha256'>;
+
 export type RecoveryValue = 0 | 1 | 2 | 3;
 
 export type SignatureAndRecovery = [
@@ -16,7 +18,7 @@ export type SignatureAndRecovery = [
 ];
 
 
-/* eslint-disable @typescript-eslint/no-duplicate-enum-values */
+/* eslint-disable @typescript-eslint/no-duplicate-enum-values, @typescript-eslint/prefer-literal-enum-member */
 export const enum ByteLens {
 	RANDOM_SEED = 32,  // when randomizing context
 
@@ -30,13 +32,21 @@ export const enum ByteLens {
 
 	ECDSA_SIG_COMPACT = 64,
 	ECDSA_SIG_LIB = 64,  // secp256k1_ecdsa_signature: char [64];
-	// ECDSA_SIG_RECOVERABLE_LIB = 65,  // secp256k1_ecdsa_recoverable_signature: char [65];
-	// ECDSA_SIG_MAX = 65,  // compact recoverable signature is largest
-
-	RECOVERY_UINT32=4,  // signature recovery value
 
 	MSG_HASH = 32,
 	NONCE_ENTROPY = 32,
+
+	/**
+	 * From the source:
+	 * ```
+	 * typedef struct {
+	 *   uint32_t s[8];
+	 *   unsigned char buf[64];
+	 *   uint64_t bytes;
+	 * } secp256k1_sha256;
+	 * ```
+	 */
+	SHA256 = (4 * 8) + 64 + 8,
 }
 
 // ##### From secp256k1.h: #####
@@ -343,6 +353,24 @@ export interface Secp256k1WasmEcdsaRecovery {
 		ip_hash_in: Pointer<32>,
 		ip_sk_in: Pointer<32>,
 		ip_noncefn_in: PointerNonceFn,
-		ip_ent_in: Pointer<32>
+		ip_ent_in: Pointer<32>,
 	): BinaryResult;
+}
+
+
+export interface Secp256k1WasmSha256 {
+	sha256_initialize(
+		ip_hash: PointerSha256,
+	): void;
+
+	sha256_write(
+		ip_hash: PointerSha256,
+		ip_data_in: Pointer<number>,
+		nb_data_in: number,
+	): void;
+
+	sha256_finalize(
+		ip_hash: PointerSha256,
+		ip_digest_out: Pointer<32>,
+	): void;
 }
