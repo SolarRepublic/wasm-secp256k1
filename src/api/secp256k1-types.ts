@@ -112,6 +112,24 @@ export interface Secp256k1WasmCore extends WasmExportsExtension {
 	): BinaryResult;
 
 
+	/** Verify an ECDSA secret key.
+	 *
+	 *  A secret key is valid if it is not 0 and less than the secp256k1 curve order
+	 *  when interpreted as an integer (most significant byte first). The
+	 *  probability of choosing a 32-byte string uniformly at random which is an
+	 *  invalid secret key is negligible.
+	 *
+	 *  Returns: 1: secret key is valid
+	 *           0: secret key is invalid
+	 *  Args:    ctx: pointer to a context object.
+	 *  In:      seckey: pointer to a 32-byte secret key.
+	 */
+	ec_seckey_verify(
+		ip_ctx: PointerContext,
+		ip_sk_in: Pointer<32>,
+	): BinaryResult;
+
+
 	/** Parse a variable-length public key into the pubkey object.
 	 *
 	 *  Returns: 1 if the public key was fully valid.

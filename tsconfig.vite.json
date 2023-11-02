@@ -1,0 +1,12 @@
+// only used to include .ts files in the project root to make eslint happy
+{
+	"extends": "./tsconfig.json",
+
+	"compilerOptions": {
+		"noEmit": true,
+	},
+
+	"include": [
+		"./*.ts"
+	]
+}

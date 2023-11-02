@@ -14,4 +14,4 @@ WORKDIR /app
 RUN ./compile.sh
 
 # copy outputs to mounted volume
-CMD ["cp", "/app/out/secp256k1.js", "/app/out/secp256k1.wasm", "/out"]
+CMD ["cp", "-r", "/app/out", "/out"]

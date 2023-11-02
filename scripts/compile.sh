@@ -43,9 +43,11 @@ emconfigure ./configure \
   --enable-module-schnorrsig=no \
   --enable-module-ellswift=no \
   --enable-module-extrakeys=no \
-  --with-ecmult-window=2 \
+  --with-ecmult-window=4 \
   --with-ecmult-gen-precision=2 \
-  CFLAGS="-O3"
+  --disable-shared \
+  CFLAGS="-fdata-sections -ffunction-sections -O2" \
+  LDFLAGS="-Wl,--gc-sections"
 
 # make
 emmake make FORMAT=wasm
@@ -60,7 +62,7 @@ emcc src/precompute_ecmult-precompute_ecmult.o \
   src/libsecp256k1_precomputed_la-precomputed_ecmult.o \
   src/libsecp256k1_precomputed_la-precomputed_ecmult_gen.o \
   src/libsecp256k1_la-secp256k1.o \
-  -O3 \
+  -O2 \
   -s WASM=1 \
   -s "BINARYEN_METHOD='native-wasm'" \
   -s DETERMINISTIC=1 \

@@ -24,6 +24,19 @@ const random_32 = () => crypto.getRandomValues(buffer(32));
  */
 export interface Secp256k1 {
 	/**
+	 * Generates a new private key using crypto secure random bytes and without modulo bias
+	 * @returns a new private key (32 bytes)
+	 */
+	gen_sk(): Uint8Array;
+
+	/**
+	 * Asserts that the given private key is valid, throws otherwise
+	 * @param atu8_sk - the private key (32 bytes)
+	 * @returns the same `Uint8Array`
+	 */
+	valid_sk(atu8_sk: Uint8Array): Uint8Array;
+
+	/**
 	 * Computes the public key for a given private key
 	 * @param atu8_sk - the private key (32 bytes)
 	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
@@ -62,7 +75,7 @@ export interface Secp256k1 {
  * @param dp_res - a Response containing the WASM binary, or a Promise that resolves to one
  * @returns the wrapper API
  */
-export const wasm_secp256k1 = async(dp_res: Promisable<Response>): Promise<Secp256k1> => {
+export const WasmSecp256k1 = async(dp_res: Promisable<Response>): Promise<Secp256k1> => {
 	// prepare the runtime
 	const [g_imports, f_bind_heap] = emsimp(map_wasm_imports, 'wasm-secp256k1');
 
@@ -203,7 +216,26 @@ export const wasm_secp256k1 = async(dp_res: Promisable<Response>): Promise<Secp2
 		return ATU8_HEAP.slice(ip_pk_scratch, ip_pk_scratch+nb_pk);
 	};
 
+	/**
+	 * Asserts the private key is valid
+	 * @param atu8_sk - the private key (32 bytes)
+	 * @returns the valid private key, or throws if the caller somehow discovered an invalid sk
+	 */
+	const valid_sk = (atu8_sk: Uint8Array): Uint8Array => {
+		// while using the private key, assert the length is valid and the point falls within curve order
+		if(with_sk(atu8_sk, () => 32 !== atu8_sk.length || BinaryResult.SUCCESS !== g_wasm.ec_seckey_verify(ip_ctx, ip_sk))) {
+			throw Error(S_REASON_INVALID_SK);
+		}
+
+		// return the valid sk
+		return atu8_sk;
+	};
+
 	return {
+		gen_sk: () => valid_sk(crypto.getRandomValues(buffer(32))),
+
+		valid_sk,
+
 		sk_to_pk(atu8_sk, b_uncompressed=false) {
 			// randomize context
 			randomize_context();

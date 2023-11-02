@@ -1,4 +1,3 @@
-// root tsconfig extended by others; this should never be used by `tsc`
 {
 	"extends": "@blake.regalia/tsconfig/tsconfig.node.json",
 

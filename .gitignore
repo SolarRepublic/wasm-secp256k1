@@ -6,6 +6,7 @@
 /gen
 /lib
 /proto
+/public/out
 
 # private
 **/*.env

@@ -11,6 +11,13 @@ module.exports = {
 		'@typescript-eslint/no-unsafe-argument': 'off',
 		'unused-imports/no-unused-imports': 'warn',
 		'@typescript-eslint/naming-convention': 'off',
-		'@typescript-eslint/explicit-module-boundary-types': 'off',
 	},
+	overrides: [
+		{
+			files: ['./*.ts'],
+			parserOptions: {
+				project: 'tsconfig.vite.json',
+			},
+		},
+	],
 };
