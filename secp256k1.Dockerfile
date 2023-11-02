@@ -11,7 +11,7 @@ COPY scripts/compile.sh /app
 
 WORKDIR /app
 
-RUN ./compile.sh
+RUN ./compile.sh --externalize-sha256
 
 # copy outputs to mounted volume
 CMD ["cp", "-r", "/app/out", "/out"]
