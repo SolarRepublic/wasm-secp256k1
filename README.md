@@ -2,6 +2,8 @@
 
 The [libsecp256k1 C library](https://github.com/bitcoin-core/secp256k1) compiled to WASM and wrapped with an ultralight TypeScript API.
 
+### [Demo webapp](https://starshell.net/wasm-secp256k1/)
+
 Supports four basic operations:
  - Computing the corresponding public key for a given private key
  - Signing
