@@ -2,8 +2,6 @@
 
 The [libsecp256k1 C library](https://github.com/bitcoin-core/secp256k1) compiled to WASM and wrapped with an ultralight TypeScript API.
 
-### [Demo webapp](https://starshell.net/wasm-secp256k1/)
-
 Supports four basic operations:
  - Computing the corresponding public key for a given private key
  - Signing
@@ -15,6 +13,8 @@ This module offers *substantially* greater security than pure JavaScript impleme
 In addition to zero-ing out private keys after use, the wrapper also randomizes the lib context every time a public key is computed or a message is signed.
 
 Signature recovery is not currently enabled, but is easy to add. If you meed it, please open an issue.
+
+## [Demo webapp](https://starshell.net/wasm-secp256k1/)
 
 
 ## Install
