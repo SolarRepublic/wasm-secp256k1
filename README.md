@@ -14,7 +14,7 @@ In addition to zero-ing out private keys after use, the wrapper also randomizes 
 
 Signature recovery is not currently enabled, but is easy to add. If you meed it, please open an issue.
 
-### [Demo webapp](https://starshell.net/wasm-secp256k1/)
+### [Demo webapp](https://starshell.net/wasm-secp256k1/) and its [source](https://github.com/SolarRepublic/wasm-secp256k1/blob/main/src/demo/webapp.ts)
 
 
 ## Install
@@ -83,6 +83,13 @@ interface Secp256k1 {
     * @returns the shared secret (32 bytes)
     */
     ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array;
+
+	/**
+	 * Synchronous SHA-256 hash function
+	 * @param atu8_data - message to hash synchronously
+	 * @returns the message digest (32 bytes)
+	 */
+	sha256(atu8_data: Uint8Array): Uint8Array;
 }
 ```
 
@@ -125,6 +132,6 @@ The library is imported as a git submodule directly from upstream.
 
 However, there is one modification made by default to `hash_impl.h` and `hash.h` to make the sha256 hashing functions external. This makes it so that they can be used from JS environment to provide a synchronous hash function, which can be useful in certain contexts where developers would otherwise be relegated to Web Crypto's async API.
 
-You can review the changes made [here](./blob/main/scripts/compile.sh#L81-L82). It simply removes the `static` storage modifier and adds `external` in the include header to those three sha256 functions.
+The change simply removes the `static` storage modifier and adds `external` in the include header to those three sha256 functions. You can review the changes made [here](./scripts/compile.sh#L81-L82).
 
 If you don't want or disagree with those changes, you can omit the `--externalize-sha256` option passed to the compile script.
