@@ -14,7 +14,7 @@ In addition to zero-ing out private keys after use, the wrapper also randomizes 
 
 Signature recovery is not currently enabled, but is easy to add. If you meed it, please open an issue.
 
-## [Demo webapp](https://starshell.net/wasm-secp256k1/)
+### [Demo webapp](https://starshell.net/wasm-secp256k1/)
 
 
 ## Install
