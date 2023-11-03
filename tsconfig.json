@@ -3,10 +3,12 @@
 
 	"compilerOptions": {
 		"baseUrl": ".",
-		"outDir": "dist",
-		"declarationDir": "dist",
+	
+		"noEmit": true,
+		"declaration": false,
 
-		"declaration": true,
+		"outDir": "dist",
+
 		"noImplicitReturns": false,
 
 		"allowJs": false,
@@ -16,6 +18,7 @@
 
 	"include": [
 		"src/**/*.ts",
+		"*.ts",
 	],
 
 	"ts-node": {
