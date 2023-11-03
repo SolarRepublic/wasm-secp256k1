@@ -6,6 +6,11 @@ export default defineConfig(({mode:si_mode}) => ({
 		sourcemap: true,
 		minify: false,
 		emptyOutDir: true,
+		rollupOptions: {
+			output: {
+				entryFileNames: 'assets/[name].js',
+			},
+		},
 	},
 	base: './',
 }));

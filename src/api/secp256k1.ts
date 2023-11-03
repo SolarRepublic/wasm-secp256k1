@@ -1,4 +1,4 @@
-import type {PointerNonceFn, PointerPubkey, PointerSeed, PointerSha256, PointerSig, Secp256k1WasmCore, Secp256k1WasmEcdh, Secp256k1WasmEcdsaRaw, Secp256k1WasmSha256} from './secp256k1-types.js';
+import type {PointerNonceFn, PointerPubkey, PointerSeed, PointerSig, Secp256k1WasmCore, Secp256k1WasmEcdh, Secp256k1WasmEcdsaRaw} from './secp256k1-types.js';
 import type {ByteSize, Pointer} from '../types.js';
 
 import type {Promisable} from '@blake.regalia/belt';
@@ -68,24 +68,15 @@ export interface Secp256k1 {
 	 * @returns the shared secret (32 bytes)
 	 */
 	ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array;
-
-	/**
-	 * Synchronous SHA-256 hash function
-	 * @param atu8_data - message to hash synchronously
-	 * @returns the message digest (32 bytes)
-	 */
-	sha256(atu8_data: Uint8Array): Uint8Array;
 }
 
 /**
  * Creates a new instance of the secp256k1 WASM and returns its ES wrapper
  * @param dp_res - a Response containing the WASM binary, or a Promise that resolves to one
- * @param nb_sha256_buffer - size of the buffer to create in WASM heap for loading data while hashing (defaults to 16 KiB)
  * @returns the wrapper API
  */
 export const WasmSecp256k1 = async(
-	dp_res: Promisable<Response>,
-	nb_sha256_buffer=1024*16
+	dp_res: Promisable<Response>
 ): Promise<Secp256k1> => {
 	// prepare the runtime
 	const [g_imports, f_bind_heap] = emsimp(map_wasm_imports, 'wasm-secp256k1');
@@ -98,7 +89,6 @@ export const WasmSecp256k1 = async(
 		Secp256k1WasmCore
 		& Secp256k1WasmEcdh
 		& Secp256k1WasmEcdsaRaw
-		& Secp256k1WasmSha256
 	>(d_wasm.instance.exports);
 
 	// bind the heap and ref its view(s)
@@ -115,8 +105,6 @@ export const WasmSecp256k1 = async(
 	const ip_seed = malloc<PointerSeed>(ByteLens.RANDOM_SEED);
 	const ip_sk_shared = malloc(ByteLens.ECDH_SHARED_SK);
 	const ip_msg_hash = malloc(ByteLens.MSG_HASH);
-	const ip_sh256 = malloc<PointerSha256>(ByteLens.SHA256);
-	const ip_buffer = malloc(nb_sha256_buffer);
 
 	// scratch spaces
 	const ip_sig_scratch = malloc(ByteLens.ECDSA_SIG_COMPACT);
@@ -327,32 +315,6 @@ export const WasmSecp256k1 = async(
 				// return copy of result bytes
 				return ATU8_HEAP.slice(ip_sk_shared, ip_sk_shared+ByteLens.ECDH_SHARED_SK);
 			});
-		},
-
-		sha256(atu8_data) {
-			// initialize new hash object
-			g_wasm.sha256_initialize(ip_sh256);
-
-			// each chunk of input data
-			for(let ib_read=0; ib_read<atu8_data.length;) {
-				// select the chunk
-				const atu8_chunk = atu8_data.subarray(ib_read, ib_read+nb_sha256_buffer);
-
-				// copy into WASM memory
-				ATU8_HEAP.set(atu8_chunk, ip_buffer);
-
-				// advance the read pointer
-				ib_read += atu8_chunk.length;
-
-				// write to the hash
-				g_wasm.sha256_write(ip_sh256, ip_buffer, atu8_chunk.length);
-			}
-
-			// finalize the hash
-			g_wasm.sha256_finalize(ip_sh256, ip_msg_hash);
-
-			// return a copy
-			return ATU8_HEAP.subarray(ip_msg_hash, ip_msg_hash+ByteLens.MSG_HASH);
 		},
 	};
 };

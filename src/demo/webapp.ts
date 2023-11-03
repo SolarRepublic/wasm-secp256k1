@@ -1,4 +1,4 @@
-import {buffer_to_hex, hex_to_buffer, text_to_buffer} from '@blake.regalia/belt';
+import {buffer_to_hex, hex_to_buffer, sha256, text_to_buffer} from '@blake.regalia/belt';
 
 import {WasmSecp256k1} from '../api/secp256k1';
 
@@ -51,11 +51,11 @@ const dm_verified = elem<HTMLInputElement>('verified');
 
 		dm_pk.value = buffer_to_hex(atu8_pk);
 
-		reload_sig();
+		void reload_sig();
 	}
 
-	function reload_sig() {
-		atu8_hash = k_secp.sha256(text_to_buffer(dm_msg.value));
+	async function reload_sig() {
+		atu8_hash = await sha256(text_to_buffer(dm_msg.value));
 
 		dm_hash.value = buffer_to_hex(atu8_hash);
 
