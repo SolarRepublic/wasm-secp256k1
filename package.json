@@ -16,7 +16,8 @@
     "build:wasm-ts": "bun run ./src/generate.ts public/out/secp256k1.js > ./src/gen/wasm.ts",
     "build:wasm": "bun run build:wasm-bin && bun run build:wasm-ts",
     "build:demo": "vite build && rm docs/out/secp256k1.js",
-    "build": "bun run build:wasm && tsc && bun run build:demo",
+    "build:ts": "tsc && bun run build:demo",
+    "build": "bun run build:wasm && bun run build:ts",
     "demo": "bun run build && vite dev"
   },
   "dependencies": {},
