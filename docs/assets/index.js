@@ -160,9 +160,15 @@ const S_TAG_ECDSA_VERIFY = "ECDSA verify: ";
 const S_REASON_INVALID_SK = "Invalid private key";
 const S_REASON_INVALID_PK = "Invalid public key";
 const random_32 = () => crypto.getRandomValues(buffer(32));
-const WasmSecp256k1 = async (dp_res) => {
+const WasmSecp256k1 = async (z_src) => {
   const [g_imports, f_bind_heap] = emsimp(map_wasm_imports, "wasm-secp256k1");
-  const d_wasm = await WebAssembly.instantiateStreaming(dp_res, g_imports);
+  let d_wasm;
+  if (z_src instanceof Response || z_src instanceof Promise) {
+    d_wasm = await WebAssembly.instantiateStreaming(z_src, g_imports);
+  } else {
+    d_wasm = await WebAssembly.instantiate(z_src, g_imports);
+  }
+  await WebAssembly.instantiate(z_src, g_imports);
   const g_wasm = map_wasm_exports(d_wasm.instance.exports);
   const [, ATU8_HEAP, ATU32_HEAP] = f_bind_heap(g_wasm.memory);
   g_wasm.init();

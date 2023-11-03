@@ -29,10 +29,11 @@ npm install @solar-republic/wasm-secp256k1
 ```ts
 /**
  * Creates a new instance of the secp256k1 WASM and returns its ES wrapper
- * @param dp_res - a Response containing the WASM binary, or a Promise that resolves to one
+ * @param z_src - a Response containing the WASM binary, a Promise that resolves to one,
+ * 	or the raw bytes to the WASM binary as a {@link BufferSource}
  * @returns the wrapper API
  */
-export declare const WasmSecp256k1 = (dp_res: Promisable<Response>): Promise<Secp256k1>;
+export declare const WasmSecp256k1 = (dp_res: Promisable<Response> | BufferSource): Promise<Secp256k1>;
 
 /**
  * Wrapper instance providing operations backed by libsecp256k1 WASM module
@@ -89,13 +90,39 @@ interface Secp256k1 {
 
 ## Example
 
+Choose which import method suites your needs:
+
 ```ts
-import {WasmSecp256k1} from '@solar-republic/wasm-secp256k1';
+// import with the binary preloaded and uncompressed
+import {initWasmSecp256k1} from '@solar-republic/wasm-secp256k1'
 
-// instantiate WASM module
-const secp256k1 = WasmSecp256k1(await fetch('secp256k1.wasm'));
+// no need to perform fetch, but bundle will be larger (+332 KiB)
+const secp256k1 = await initWasmSecp256k1();
 
 
+// --- OR ----
+
+
+// import with the binary preloaded and gzipped (requires globalThis.DecompressionSteam)
+import {initWasmSecp256k1} from '@solar-republic/wasm-secp256k1/gzipped'
+
+// no need to perform fetch, but bundle will be still be a bit larger (+175 KiB)
+const secp256k1 = await initWasmSecp256k1();
+
+
+// --- OR ----
+
+
+// import the 'headless' version
+import {WasmSecp256k1} from '@solar-republic/wasm-secp256k1/headless';
+
+// instantiate WASM module by providing the binary yourself (the constructor also accepts raw bytes)
+const secp256k1 = await WasmSecp256k1(await fetch('secp256k1.wasm'));
+
+```
+
+Using the instance:
+```ts
 // generate a random private key
 const sk = secp256k1.gen_sk()
 

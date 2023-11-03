@@ -72,17 +72,29 @@ export interface Secp256k1 {
 
 /**
  * Creates a new instance of the secp256k1 WASM and returns its ES wrapper
- * @param dp_res - a Response containing the WASM binary, or a Promise that resolves to one
+ * @param z_src - a Response containing the WASM binary, a Promise that resolves to one,
+ * 	or the raw bytes to the WASM binary as a {@link BufferSource}
  * @returns the wrapper API
  */
 export const WasmSecp256k1 = async(
-	dp_res: Promisable<Response>
+	z_src: Promisable<Response> | BufferSource
 ): Promise<Secp256k1> => {
 	// prepare the runtime
 	const [g_imports, f_bind_heap] = emsimp(map_wasm_imports, 'wasm-secp256k1');
 
+	// prep the wasm module
+	let d_wasm: WebAssembly.WebAssemblyInstantiatedSource;
+
 	// instantiate wasm binary by streaming the response bytes
-	const d_wasm = await WebAssembly.instantiateStreaming(dp_res, g_imports);
+	if(z_src instanceof Response || z_src instanceof Promise) {
+		d_wasm = await WebAssembly.instantiateStreaming(z_src as Response, g_imports);
+	}
+	// instantiate using raw bianry
+	else {
+		d_wasm = await WebAssembly.instantiate(z_src as BufferSource, g_imports);
+	}
+
+	await WebAssembly.instantiate(z_src, g_imports);
 
 	// create the libsecp256k1 exports struct
 	const g_wasm = map_wasm_exports<
