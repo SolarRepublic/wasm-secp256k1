@@ -3,9 +3,10 @@
   "description": "TypeScript wrapper and Web Assembly module of the libsecp256k1 C library",
   "version": "0.1.0",
   "type": "module",
-  "main": "build/dist/main.js",
+  "main": "dist/main.js",
   "files": [
-    "build/dist/"
+    "dist/",
+    "public/"
   ],
   "author": "Blake Regalia <blake.regalia@gmail.com>",
   "license": "MIT",
