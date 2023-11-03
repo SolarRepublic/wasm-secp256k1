@@ -24,9 +24,6 @@ export interface WasmImportsExtension extends WasmImports {
 }
 
 export interface WasmExportsExtension extends WasmExports {
-	sha256_initialize: Function;
-	sha256_write: Function;
-	sha256_finalize: Function;
 	context_create: Function;
 	ec_pubkey_parse: Function;
 	ec_pubkey_serialize: Function;
@@ -56,20 +53,17 @@ export const map_wasm_exports = <
 >(g_exports: WebAssembly.Exports): g_extension => ({
 	malloc: g_exports['i'],
 	free: g_exports['j'],
-	sha256_initialize: g_exports['l'],
-	sha256_write: g_exports['m'],
-	sha256_finalize: g_exports['n'],
-	context_create: g_exports['o'],
-	ec_pubkey_parse: g_exports['p'],
-	ec_pubkey_serialize: g_exports['q'],
-	ecdsa_signature_parse_compact: g_exports['r'],
-	ecdsa_signature_serialize_compact: g_exports['s'],
-	ecdsa_verify: g_exports['t'],
-	ecdsa_sign: g_exports['u'],
-	ec_seckey_verify: g_exports['v'],
-	ec_pubkey_create: g_exports['w'],
-	context_randomize: g_exports['x'],
-	ecdh: g_exports['y'],
+	context_create: g_exports['l'],
+	ec_pubkey_parse: g_exports['m'],
+	ec_pubkey_serialize: g_exports['n'],
+	ecdsa_signature_parse_compact: g_exports['o'],
+	ecdsa_signature_serialize_compact: g_exports['p'],
+	ecdsa_verify: g_exports['q'],
+	ecdsa_sign: g_exports['r'],
+	ec_seckey_verify: g_exports['s'],
+	ec_pubkey_create: g_exports['t'],
+	context_randomize: g_exports['u'],
+	ecdh: g_exports['v'],
 	sbrk: g_exports['sbrk'],
 	memory: g_exports['g'],
 

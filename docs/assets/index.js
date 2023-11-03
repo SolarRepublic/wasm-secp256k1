@@ -40,6 +40,7 @@
   }
 })();
 const buffer = (...a_args) => new Uint8Array(...a_args);
+const sha256 = async (atu8_data) => buffer(await crypto.subtle.digest("SHA-256", atu8_data));
 const text_to_buffer = (s_text) => new TextEncoder().encode(s_text);
 const buffer_to_text = (atu8_text) => new TextDecoder().decode(atu8_text);
 const buffer_to_hex = (atu8_buffer) => atu8_buffer.reduce((s_out, xb_byte) => s_out + xb_byte.toString(16).padStart(2, "0"), "");
@@ -139,20 +140,17 @@ const map_wasm_imports = (g_imports) => ({
 const map_wasm_exports = (g_exports) => ({
   malloc: g_exports["i"],
   free: g_exports["j"],
-  sha256_initialize: g_exports["l"],
-  sha256_write: g_exports["m"],
-  sha256_finalize: g_exports["n"],
-  context_create: g_exports["o"],
-  ec_pubkey_parse: g_exports["p"],
-  ec_pubkey_serialize: g_exports["q"],
-  ecdsa_signature_parse_compact: g_exports["r"],
-  ecdsa_signature_serialize_compact: g_exports["s"],
-  ecdsa_verify: g_exports["t"],
-  ecdsa_sign: g_exports["u"],
-  ec_seckey_verify: g_exports["v"],
-  ec_pubkey_create: g_exports["w"],
-  context_randomize: g_exports["x"],
-  ecdh: g_exports["y"],
+  context_create: g_exports["l"],
+  ec_pubkey_parse: g_exports["m"],
+  ec_pubkey_serialize: g_exports["n"],
+  ecdsa_signature_parse_compact: g_exports["o"],
+  ecdsa_signature_serialize_compact: g_exports["p"],
+  ecdsa_verify: g_exports["q"],
+  ecdsa_sign: g_exports["r"],
+  ec_seckey_verify: g_exports["s"],
+  ec_pubkey_create: g_exports["t"],
+  context_randomize: g_exports["u"],
+  ecdh: g_exports["v"],
   sbrk: g_exports["sbrk"],
   memory: g_exports["g"],
   init: () => g_exports["h"]()
@@ -162,7 +160,7 @@ const S_TAG_ECDSA_VERIFY = "ECDSA verify: ";
 const S_REASON_INVALID_SK = "Invalid private key";
 const S_REASON_INVALID_PK = "Invalid public key";
 const random_32 = () => crypto.getRandomValues(buffer(32));
-const WasmSecp256k1 = async (dp_res, nb_sha256_buffer = 1024 * 16) => {
+const WasmSecp256k1 = async (dp_res) => {
   const [g_imports, f_bind_heap] = emsimp(map_wasm_imports, "wasm-secp256k1");
   const d_wasm = await WebAssembly.instantiateStreaming(dp_res, g_imports);
   const g_wasm = map_wasm_exports(d_wasm.instance.exports);
@@ -174,8 +172,6 @@ const WasmSecp256k1 = async (dp_res, nb_sha256_buffer = 1024 * 16) => {
   const ip_seed = malloc(ByteLens.RANDOM_SEED);
   const ip_sk_shared = malloc(ByteLens.ECDH_SHARED_SK);
   const ip_msg_hash = malloc(ByteLens.MSG_HASH);
-  const ip_sh256 = malloc(ByteLens.SHA256);
-  const ip_buffer = malloc(nb_sha256_buffer);
   const ip_sig_scratch = malloc(ByteLens.ECDSA_SIG_COMPACT);
   const ip_pk_scratch = malloc(ByteLens.PUBLIC_KEY_MAX);
   const ip_pk_lib = malloc(ByteLens.PUBLIC_KEY_LIB);
@@ -268,17 +264,6 @@ const WasmSecp256k1 = async (dp_res, nb_sha256_buffer = 1024 * 16) => {
         }
         return ATU8_HEAP.slice(ip_sk_shared, ip_sk_shared + ByteLens.ECDH_SHARED_SK);
       });
-    },
-    sha256(atu8_data) {
-      g_wasm.sha256_initialize(ip_sh256);
-      for (let ib_read = 0; ib_read < atu8_data.length; ) {
-        const atu8_chunk = atu8_data.subarray(ib_read, ib_read + nb_sha256_buffer);
-        ATU8_HEAP.set(atu8_chunk, ip_buffer);
-        ib_read += atu8_chunk.length;
-        g_wasm.sha256_write(ip_sh256, ip_buffer, atu8_chunk.length);
-      }
-      g_wasm.sha256_finalize(ip_sh256, ip_msg_hash);
-      return ATU8_HEAP.subarray(ip_msg_hash, ip_msg_hash + ByteLens.MSG_HASH);
     }
   };
 };
@@ -318,10 +303,10 @@ const dm_verified = elem("verified");
       return sk_err(e_convert.message);
     }
     dm_pk.value = buffer_to_hex(atu8_pk);
-    reload_sig();
+    void reload_sig();
   }
-  function reload_sig() {
-    atu8_hash = k_secp.sha256(text_to_buffer(dm_msg.value));
+  async function reload_sig() {
+    atu8_hash = await sha256(text_to_buffer(dm_msg.value));
     dm_hash.value = buffer_to_hex(atu8_hash);
     try {
       atu8_sig = k_secp.sign(atu8_sk, atu8_hash);
@@ -343,4 +328,4 @@ const dm_verified = elem("verified");
   dm_msg.addEventListener("input", reload_sig);
   reload_sk();
 })();
-//# sourceMappingURL=index-8e6401d6.js.map
+//# sourceMappingURL=index.js.map

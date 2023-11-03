@@ -1,7 +1,7 @@
 {
   "name": "@solar-republic/wasm-secp256k1",
   "description": "TypeScript wrapper and Web Assembly module of the libsecp256k1 C library",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0",
   "type": "module",
   "main": "build/dist/main.js",
   "files": [
@@ -14,7 +14,8 @@
     "build:wasm-bin": "docker build -f secp256k1.Dockerfile . -t wasm-secp256k1 && docker run --rm -v $(pwd)/public:/out wasm-secp256k1",
     "build:wasm-ts": "bun run ./src/generate.ts public/out/secp256k1.js > ./src/gen/wasm.ts",
     "build:wasm": "bun run build:wasm-bin && bun run build:wasm-ts",
-    "build": "bun run build:wasm && tsc",
+    "build:demo": "vite build && rm docs/out/secp256k1.js",
+    "build": "bun run build:wasm && tsc && bun run build:demo",
     "demo": "bun run build && vite dev"
   },
   "dependencies": {},
