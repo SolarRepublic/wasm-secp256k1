@@ -94,8 +94,6 @@ export const WasmSecp256k1 = async(
 		d_wasm = await WebAssembly.instantiate(z_src as BufferSource, g_imports);
 	}
 
-	await WebAssembly.instantiate(z_src, g_imports);
-
 	// create the libsecp256k1 exports struct
 	const g_wasm = map_wasm_exports<
 		Secp256k1WasmCore
