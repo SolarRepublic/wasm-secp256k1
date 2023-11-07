@@ -168,7 +168,6 @@ const WasmSecp256k1 = async (z_src) => {
   } else {
     d_wasm = await WebAssembly.instantiate(z_src, g_imports);
   }
-  await WebAssembly.instantiate(z_src, g_imports);
   const g_wasm = map_wasm_exports(d_wasm.instance.exports);
   const [, ATU8_HEAP, ATU32_HEAP] = f_bind_heap(g_wasm.memory);
   g_wasm.init();
