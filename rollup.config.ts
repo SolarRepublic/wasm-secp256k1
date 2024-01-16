@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {gzipSync} from 'node:zlib';
 
-import {buffer_to_base64} from '@blake.regalia/belt';
+import {bytes_to_base64} from '@blake.regalia/belt';
 import typescript from '@rollup/plugin-typescript';
 import {defineConfig} from 'rollup';
 
@@ -52,7 +52,7 @@ export default defineConfig({
 				if(p_file.endsWith('?gzip')) {
 					p_file = p_file.replace(/\?gzip$/, '');
 
-					sb64_contents = buffer_to_base64(gzipSync(readFileSync(p_file)));
+					sb64_contents = bytes_to_base64(gzipSync(readFileSync(p_file)));
 				}
 				// raw
 				else {

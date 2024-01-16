@@ -1,4 +1,4 @@
-import {buffer_to_hex, hex_to_buffer, sha256, text_to_buffer} from '@blake.regalia/belt';
+import {bytes_to_hex, hex_to_bytes, sha256, text_to_bytes} from '@blake.regalia/belt';
 
 import {WasmSecp256k1} from '../api/secp256k1';
 
@@ -40,7 +40,7 @@ const dm_verified = elem<HTMLInputElement>('verified');
 			return sk_err('Not hexadecimal');
 		}
 
-		atu8_sk = hex_to_buffer(sb16_sk);
+		atu8_sk = hex_to_bytes(sb16_sk);
 
 		try {
 			atu8_pk = k_secp.sk_to_pk(atu8_sk);
@@ -49,15 +49,15 @@ const dm_verified = elem<HTMLInputElement>('verified');
 			return sk_err((e_convert as Error).message);
 		}
 
-		dm_pk.value = buffer_to_hex(atu8_pk);
+		dm_pk.value = bytes_to_hex(atu8_pk);
 
 		void reload_sig();
 	}
 
 	async function reload_sig() {
-		atu8_hash = await sha256(text_to_buffer(dm_msg.value));
+		atu8_hash = await sha256(text_to_bytes(dm_msg.value));
 
-		dm_hash.value = buffer_to_hex(atu8_hash);
+		dm_hash.value = bytes_to_hex(atu8_hash);
 
 		try {
 			atu8_sig = k_secp.sign(atu8_sk, atu8_hash);
@@ -66,8 +66,8 @@ const dm_verified = elem<HTMLInputElement>('verified');
 			return dm_sig_r.value = (e_convert as Error).message;
 		}
 
-		dm_sig_r.value = buffer_to_hex(atu8_sig.subarray(0, 32));
-		dm_sig_s.value = buffer_to_hex(atu8_sig.subarray(32));
+		dm_sig_r.value = bytes_to_hex(atu8_sig.subarray(0, 32));
+		dm_sig_s.value = bytes_to_hex(atu8_sig.subarray(32));
 
 		try {
 			k_secp.verify(atu8_sig, atu8_hash, atu8_pk);
@@ -83,7 +83,7 @@ const dm_verified = elem<HTMLInputElement>('verified');
 	atu8_sk = k_secp.gen_sk();
 
 	// set value in UI
-	dm_sk.value = buffer_to_hex(atu8_sk);
+	dm_sk.value = bytes_to_hex(atu8_sk);
 
 	// bind to input events
 	dm_sk.addEventListener('input', reload_sk);

@@ -3,8 +3,6 @@ import type {ByteSize, Pointer} from '../types.js';
 
 import type {Promisable} from '@blake.regalia/belt';
 
-import {buffer} from '@blake.regalia/belt';
-
 import {emsimp} from './emsimp.js';
 import {BinaryResult, ByteLens, Flags} from './secp256k1-types.js';
 import {map_wasm_exports, map_wasm_imports} from '../gen/wasm.js';
@@ -16,8 +14,9 @@ const S_TAG_ECDSA_VERIFY = 'ECDSA verify: ';
 const S_REASON_INVALID_SK = 'Invalid private key';
 const S_REASON_INVALID_PK = 'Invalid public key';
 
+const bytes = (nb_len: number) => new Uint8Array(nb_len);
 
-const random_32 = () => crypto.getRandomValues(buffer(32));
+const random_32 = () => crypto.getRandomValues(bytes(32));
 
 /**
  * Wrapper instance providing operations backed by libsecp256k1 WASM module
@@ -143,7 +142,7 @@ export const WasmSecp256k1 = async(
 	 * @param nb_size - the size of the region
 	 */
 	const put_bytes = (atu8_data: Uint8Array, ip_write: Pointer, nb_size: ByteSize) => {
-		const atu8_buffer = buffer(nb_size);
+		const atu8_buffer = bytes(nb_size);
 		atu8_buffer.set(atu8_data);
 		ATU8_HEAP.set(atu8_buffer, ip_write);
 	};
@@ -244,7 +243,7 @@ export const WasmSecp256k1 = async(
 	};
 
 	return {
-		gen_sk: () => valid_sk(crypto.getRandomValues(buffer(ByteLens.PRIVATE_KEY))),
+		gen_sk: () => valid_sk(crypto.getRandomValues(bytes(ByteLens.PRIVATE_KEY))),
 
 		valid_sk,
 
