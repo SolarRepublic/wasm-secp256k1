@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-loop-func */
+import type {Dict} from '@blake.regalia/belt';
+
 import {readFileSync} from 'fs';
 
-import {oderac, type Dict, __UNDEFINED} from '@blake.regalia/belt';
+import {oderac, __UNDEFINED} from '@blake.regalia/belt';
 
 
 import * as acorn from 'acorn';

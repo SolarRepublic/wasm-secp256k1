@@ -39,12 +39,11 @@
     fetch(link.href, fetchOpts);
   }
 })();
-const buffer = (...a_args) => new Uint8Array(...a_args);
-const sha256 = async (atu8_data) => buffer(await crypto.subtle.digest("SHA-256", atu8_data));
-const text_to_buffer = (s_text) => new TextEncoder().encode(s_text);
-const buffer_to_text = (atu8_text) => new TextDecoder().decode(atu8_text);
-const buffer_to_hex = (atu8_buffer) => atu8_buffer.reduce((s_out, xb_byte) => s_out + xb_byte.toString(16).padStart(2, "0"), "");
-const hex_to_buffer = (sx_hex) => buffer(sx_hex.length / 2).map((xb_ignore, i_char) => parseInt(sx_hex.slice(i_char * 2, i_char * 2 + 2), 16));
+const bytes$1 = (...a_args) => new Uint8Array(...a_args);
+const sha256 = async (atu8_data) => bytes$1(await crypto.subtle.digest("SHA-256", atu8_data));
+const text_to_bytes = (s_text) => new TextEncoder().encode(s_text);
+const bytes_to_hex = (atu8_buffer) => atu8_buffer.reduce((s_out, xb_byte) => s_out + xb_byte.toString(16).padStart(2, "0"), "");
+const hex_to_bytes = (sx_hex) => bytes$1(sx_hex.length / 2).map((xb_ignore, i_char) => parseInt(sx_hex.slice(i_char * 2, i_char * 2 + 2), 16));
 const emsimp = (f_map_imports, s_tag) => {
   s_tag += ": ";
   let AB_HEAP;
@@ -77,7 +76,7 @@ const emsimp = (f_map_imports, s_tag) => {
         const ip_start = ATU32_HEAP[ip_iov >> 2];
         const nb_len = ATU32_HEAP[ip_iov + 4 >> 2];
         ip_iov += 8;
-        s_out += buffer_to_text(ATU8_HEAP.subarray(ip_start, ip_start + nb_len));
+        s_out += new TextDecoder().decode(ATU8_HEAP.subarray(ip_start, ip_start + nb_len));
         cb_read += nb_len;
       }
       if (h_fds[i_fd]) {
@@ -92,7 +91,7 @@ ${s_out}`);
   });
   return [g_imports, (d_memory) => [
     AB_HEAP = d_memory.buffer,
-    ATU8_HEAP = buffer(AB_HEAP),
+    ATU8_HEAP = new Uint8Array(AB_HEAP),
     ATU32_HEAP = new Uint32Array(AB_HEAP)
   ]];
 };
@@ -159,7 +158,8 @@ const S_TAG_ECDH = "ECDH: ";
 const S_TAG_ECDSA_VERIFY = "ECDSA verify: ";
 const S_REASON_INVALID_SK = "Invalid private key";
 const S_REASON_INVALID_PK = "Invalid public key";
-const random_32 = () => crypto.getRandomValues(buffer(32));
+const bytes = (nb_len) => new Uint8Array(nb_len);
+const random_32 = () => crypto.getRandomValues(bytes(32));
 const WasmSecp256k1 = async (z_src) => {
   const [g_imports, f_bind_heap] = emsimp(map_wasm_imports, "wasm-secp256k1");
   let d_wasm;
@@ -185,7 +185,7 @@ const WasmSecp256k1 = async (z_src) => {
   const ip_len = g_wasm.malloc(4);
   const ip32_len = ip_len >> 2;
   const put_bytes = (atu8_data, ip_write, nb_size) => {
-    const atu8_buffer = buffer(nb_size);
+    const atu8_buffer = bytes(nb_size);
     atu8_buffer.set(atu8_data);
     ATU8_HEAP.set(atu8_buffer, ip_write);
   };
@@ -223,7 +223,7 @@ const WasmSecp256k1 = async (z_src) => {
     return atu8_sk;
   };
   return {
-    gen_sk: () => valid_sk(crypto.getRandomValues(buffer(ByteLens.PRIVATE_KEY))),
+    gen_sk: () => valid_sk(crypto.getRandomValues(bytes(ByteLens.PRIVATE_KEY))),
     valid_sk,
     sk_to_pk(atu8_sk, b_uncompressed = false) {
       randomize_context();
@@ -301,25 +301,25 @@ const dm_verified = elem("verified");
     } else if (!is_hex(sb16_sk)) {
       return sk_err("Not hexadecimal");
     }
-    atu8_sk = hex_to_buffer(sb16_sk);
+    atu8_sk = hex_to_bytes(sb16_sk);
     try {
       atu8_pk = k_secp.sk_to_pk(atu8_sk);
     } catch (e_convert) {
       return sk_err(e_convert.message);
     }
-    dm_pk.value = buffer_to_hex(atu8_pk);
+    dm_pk.value = bytes_to_hex(atu8_pk);
     void reload_sig();
   }
   async function reload_sig() {
-    atu8_hash = await sha256(text_to_buffer(dm_msg.value));
-    dm_hash.value = buffer_to_hex(atu8_hash);
+    atu8_hash = await sha256(text_to_bytes(dm_msg.value));
+    dm_hash.value = bytes_to_hex(atu8_hash);
     try {
       atu8_sig = k_secp.sign(atu8_sk, atu8_hash);
     } catch (e_convert) {
       return dm_sig_r.value = e_convert.message;
     }
-    dm_sig_r.value = buffer_to_hex(atu8_sig.subarray(0, 32));
-    dm_sig_s.value = buffer_to_hex(atu8_sig.subarray(32));
+    dm_sig_r.value = bytes_to_hex(atu8_sig.subarray(0, 32));
+    dm_sig_s.value = bytes_to_hex(atu8_sig.subarray(32));
     try {
       k_secp.verify(atu8_sig, atu8_hash, atu8_pk);
     } catch (e_verify) {
@@ -328,7 +328,7 @@ const dm_verified = elem("verified");
     dm_verified.value = "Yes";
   }
   atu8_sk = k_secp.gen_sk();
-  dm_sk.value = buffer_to_hex(atu8_sk);
+  dm_sk.value = bytes_to_hex(atu8_sk);
   dm_sk.addEventListener("input", reload_sk);
   dm_msg.addEventListener("input", reload_sig);
   reload_sk();
