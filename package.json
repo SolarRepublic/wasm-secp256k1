@@ -26,23 +26,23 @@
     "demo": "bun run build && vite dev"
   },
   "dependencies": {
-    "@blake.regalia/belt": "^0.31.0"
+    "@blake.regalia/belt": "^0.35.5"
   },
   "devDependencies": {
-    "@blake.regalia/eslint-config-elite": "^0.4.0",
+    "@blake.regalia/eslint-config-elite": "^0.4.4",
     "@blake.regalia/tsconfig": "^0.2.0",
     "@rollup/plugin-typescript": "^11.1.6",
     "@rollup/plugin-wasm": "^6.2.2",
     "@rollup/pluginutils": "^5.1.0",
-    "@types/node": "^20.11.3",
-    "@types/web": "^0.0.135",
-    "@typescript-eslint/parser": "^6.19.0",
+    "@types/node": "^20.12.7",
+    "@types/web": "^0.0.142",
+    "@typescript-eslint/parser": "^7.6.0",
     "acorn": "^8.11.3",
-    "eslint": "^8.56.0",
-    "eslint-plugin-unused-imports": "^3.0.0",
-    "rollup": "^4.9.5",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.11"
+    "eslint": "^9.0.0",
+    "eslint-plugin-unused-imports": "^3.1.0",
+    "rollup": "^4.14.1",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.8"
   },
   "publishConfig": {
     "access": "public"
