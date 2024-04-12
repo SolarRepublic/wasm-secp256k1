@@ -10,8 +10,8 @@
   ],
   "exports": {
     ".": "./dist/main.js",
-    "./headless": "./dist/headless.js",
-    "./gzipped": "./dist/gzipped.js"
+    "./gzipped": "./dist/gzipped.js",
+    "./headless": "./dist/headless.js"
   },
   "author": "Blake Regalia <blake.regalia@gmail.com>",
   "license": "MIT",
