@@ -14,6 +14,7 @@ export default defineConfig({
 	input: [
 		'src/main.ts',
 		'src/gzipped.ts',
+		'src/headless.ts',
 	],
 	output: {
 		dir: 'dist',
