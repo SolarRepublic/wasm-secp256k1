@@ -35,12 +35,15 @@ export interface WasmExportsExtension extends WasmExports {
 	ec_pubkey_create: Function;
 	context_randomize: Function;
 	ecdh: Function;
+	_emscripten_stack_restore: Function;
+	_emscripten_stack_alloc: Function;
+	emscripten_stack_get_current: Function;
 }
 
 export const map_wasm_imports = (g_imports: WasmImportsExtension) => ({
 	a: {
-		a: g_imports.abort,
 		f: g_imports.memcpy,
+		a: g_imports.abort,
 		d: g_imports.resize,
 		e: () => 52,  // _fd_close,
 		c: () => 70,  // _fd_seek,
@@ -65,6 +68,9 @@ export const map_wasm_exports = <
 	context_randomize: g_exports['u'],
 	ecdh: g_exports['v'],
 	sbrk: g_exports['sbrk'],
+	_emscripten_stack_restore: g_exports['_emscripten_stack_restore'],
+	_emscripten_stack_alloc: g_exports['_emscripten_stack_alloc'],
+	emscripten_stack_get_current: g_exports['emscripten_stack_get_current'],
 	memory: g_exports['g'],
 
 	init: () => (g_exports['h'] as VoidFunction)(),

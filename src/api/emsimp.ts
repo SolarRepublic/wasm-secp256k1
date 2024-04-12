@@ -1,4 +1,4 @@
-import type {ImportMapper} from 'src/types';
+import type {ImportMapper} from '../types';
 
 export const emsimp = (f_map_imports: ImportMapper, s_tag: string) => {
 	s_tag += ': ';
