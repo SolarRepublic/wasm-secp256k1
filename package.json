@@ -22,7 +22,7 @@
     "build:wasm": "bun run build:wasm-bin && bun run build:wasm-ts",
     "build:demo": "vite build && rm docs/out/secp256k1.js",
     "build:ts": "rollup -c rollup.config.ts --configPlugin typescript && bun run build:demo",
-    "build": "bun run build:wasm && bun run build:ts",
+    "build": "bun run build:wasm && bun run build:ts && cp public/out/secp256k1.wasm dist/",
     "demo": "bun run build && vite dev"
   },
   "dependencies": {
