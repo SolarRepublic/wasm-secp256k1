@@ -39,8 +39,9 @@
     fetch(link.href, fetchOpts);
   }
 })();
+const SI_HASH_ALGORITHM_SHA256 = "SHA-256";
 const bytes$1 = (...a_args) => new Uint8Array(...a_args);
-const sha256 = async (atu8_data) => bytes$1(await crypto.subtle.digest("SHA-256", atu8_data));
+const sha256 = async (atu8_data) => bytes$1(await crypto.subtle.digest(SI_HASH_ALGORITHM_SHA256, atu8_data));
 const text_to_bytes = (s_text) => new TextEncoder().encode(s_text);
 const bytes_to_hex = (atu8_buffer) => atu8_buffer.reduce((s_out, xb_byte) => s_out + xb_byte.toString(16).padStart(2, "0"), "");
 const hex_to_bytes = (sx_hex) => bytes$1(sx_hex.length / 2).map((xb_ignore, i_char) => parseInt(sx_hex.slice(i_char * 2, i_char * 2 + 2), 16));
@@ -126,8 +127,8 @@ var BinaryResult = /* @__PURE__ */ ((BinaryResult2) => {
 })(BinaryResult || {});
 const map_wasm_imports = (g_imports) => ({
   a: {
-    a: g_imports.abort,
     f: g_imports.memcpy,
+    a: g_imports.abort,
     d: g_imports.resize,
     e: () => 52,
     // _fd_close,
@@ -151,6 +152,9 @@ const map_wasm_exports = (g_exports) => ({
   context_randomize: g_exports["u"],
   ecdh: g_exports["v"],
   sbrk: g_exports["sbrk"],
+  _emscripten_stack_restore: g_exports["_emscripten_stack_restore"],
+  _emscripten_stack_alloc: g_exports["_emscripten_stack_alloc"],
+  emscripten_stack_get_current: g_exports["emscripten_stack_get_current"],
   memory: g_exports["g"],
   init: () => g_exports["h"]()
 });

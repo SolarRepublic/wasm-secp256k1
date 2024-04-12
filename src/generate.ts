@@ -36,7 +36,7 @@ const h_exports: Dict<string> = {};
 
 const H_TYPES: Dict = {
 	_abort: `() => void`,
-	_emscripten_memcpy_js: `(ip_dst: Pointer, ip_src: Pointer, nb_size: ByteSize) => Uint8Array`,
+	__emscripten_memcpy_js: `(ip_dst: Pointer, ip_src: Pointer, nb_size: ByteSize) => Uint8Array`,
 	_emscripten_resize_heap: `(nb_size: ByteSize) => void`,
 	_fd_close: `() => FileDescriptor`,
 	_fd_seek: `(i_fd: FileDescriptor, ib_off_lo: ByteOffset, ib_off_hi: ByteOffset, xc_whence: SeekWhence, ib_off_new: ByteOffset) => FileDescriptor`,
@@ -45,7 +45,7 @@ const H_TYPES: Dict = {
 
 const H_RENAME_IMPORTS: Dict = {
 	_abort: 'abort',
-	_emscripten_memcpy_js: 'memcpy',
+	__emscripten_memcpy_js: 'memcpy',
 	_emscripten_resize_heap: 'resize',
 	_fd_write: 'write',
 };
