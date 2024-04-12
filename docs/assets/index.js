@@ -40,11 +40,11 @@
   }
 })();
 const SI_HASH_ALGORITHM_SHA256 = "SHA-256";
-const bytes$1 = (...a_args) => new Uint8Array(...a_args);
-const sha256 = async (atu8_data) => bytes$1(await crypto.subtle.digest(SI_HASH_ALGORITHM_SHA256, atu8_data));
+const bytes = (...a_args) => new Uint8Array(...a_args);
+const sha256 = async (atu8_data) => bytes(await crypto.subtle.digest(SI_HASH_ALGORITHM_SHA256, atu8_data));
 const text_to_bytes = (s_text) => new TextEncoder().encode(s_text);
 const bytes_to_hex = (atu8_buffer) => atu8_buffer.reduce((s_out, xb_byte) => s_out + xb_byte.toString(16).padStart(2, "0"), "");
-const hex_to_bytes = (sx_hex) => bytes$1(sx_hex.length / 2).map((xb_ignore, i_char) => parseInt(sx_hex.slice(i_char * 2, i_char * 2 + 2), 16));
+const hex_to_bytes = (sx_hex) => bytes(sx_hex.length / 2).map((xb_ignore, i_char) => parseInt(sx_hex.slice(i_char * 2, i_char * 2 + 2), 16));
 const emsimp = (f_map_imports, s_tag) => {
   s_tag += ": ";
   let AB_HEAP;
@@ -162,7 +162,6 @@ const S_TAG_ECDH = "ECDH: ";
 const S_TAG_ECDSA_VERIFY = "ECDSA verify: ";
 const S_REASON_INVALID_SK = "Invalid private key";
 const S_REASON_INVALID_PK = "Invalid public key";
-const bytes = (nb_len) => new Uint8Array(nb_len);
 const random_32 = () => crypto.getRandomValues(bytes(32));
 const WasmSecp256k1 = async (z_src) => {
   const [g_imports, f_bind_heap] = emsimp(map_wasm_imports, "wasm-secp256k1");
