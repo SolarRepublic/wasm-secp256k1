@@ -1,7 +1,7 @@
 {
   "name": "@solar-republic/wasm-secp256k1",
   "description": "TypeScript wrapper and Web Assembly module of the libsecp256k1 C library",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "type": "module",
   "main": "dist/main.js",
   "files": [
