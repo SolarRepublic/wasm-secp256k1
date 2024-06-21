@@ -35,7 +35,7 @@ const h_imports: Dict<[string, string]> = {};
 const h_exports: Dict<string> = {};
 
 const H_TYPES: Dict = {
-	_abort: `() => void`,
+	__abort_js: `() => void`,
 	__emscripten_memcpy_js: `(ip_dst: Pointer, ip_src: Pointer, nb_size: ByteSize) => Uint8Array`,
 	_emscripten_resize_heap: `(nb_size: ByteSize) => void`,
 	_fd_close: `() => FileDescriptor`,
@@ -44,7 +44,7 @@ const H_TYPES: Dict = {
 };
 
 const H_RENAME_IMPORTS: Dict = {
-	_abort: 'abort',
+	__abort_js: 'abort',
 	__emscripten_memcpy_js: 'memcpy',
 	_emscripten_resize_heap: 'resize',
 	_fd_write: 'write',
@@ -53,7 +53,7 @@ const H_RENAME_IMPORTS: Dict = {
 const H_KNOWN_EXPORT_TYPES: Dict = {
 	_malloc: '(nb_size: ByteSize) => Pointer',
 	_free: '(ip_ptr: Pointer) => void',
-	_sbrk: '(nb_change: ByteDelta) => Pointer',
+	// _sbrk: '(nb_change: ByteDelta) => Pointer',
 	wasmMemory: 'WebAssembly.Memory',
 };
 
@@ -110,7 +110,7 @@ for(const yn_top of yn_root.body) {
 						if('ObjectExpression' === yn_init?.type) {
 							for(const yn_prop of yn_init.properties as acorn.Property[]) {
 								if('wasmImports' === ident(yn_prop.value)) {
-									si_import_key = litval<string>(yn_prop.key);
+									si_import_key = litval<string>(yn_prop.key) || ident(yn_prop.key);
 								}
 							}
 						}

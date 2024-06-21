@@ -20,7 +20,7 @@ import type {
 } from '../types.js';
 
 export interface WasmImportsExtension extends WasmImports {
-	__abort_js: unknown;
+	
 }
 
 export interface WasmExportsExtension extends WasmExports {
@@ -38,8 +38,8 @@ export interface WasmExportsExtension extends WasmExports {
 }
 
 export const map_wasm_imports = (g_imports: WasmImportsExtension) => ({
-	undefined: {
-		f: g_imports.undefined,
+	a: {
+		f: g_imports.abort,
 		e: g_imports.memcpy,
 		c: g_imports.resize,
 		d: () => 52,  // _fd_close,

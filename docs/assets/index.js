@@ -122,8 +122,8 @@ var BinaryResult = /* @__PURE__ */ ((BinaryResult2) => {
   return BinaryResult2;
 })(BinaryResult || {});
 const map_wasm_imports = (g_imports) => ({
-  undefined: {
-    f: g_imports.undefined,
+  a: {
+    f: g_imports.abort,
     e: g_imports.memcpy,
     c: g_imports.resize,
     d: () => 52,
