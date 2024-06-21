@@ -19,16 +19,12 @@
   }).observe(document, { childList: true, subtree: true });
   function getFetchOpts(link) {
     const fetchOpts = {};
-    if (link.integrity)
-      fetchOpts.integrity = link.integrity;
-    if (link.referrerPolicy)
-      fetchOpts.referrerPolicy = link.referrerPolicy;
+    if (link.integrity) fetchOpts.integrity = link.integrity;
+    if (link.referrerPolicy) fetchOpts.referrerPolicy = link.referrerPolicy;
     if (link.crossOrigin === "use-credentials")
       fetchOpts.credentials = "include";
-    else if (link.crossOrigin === "anonymous")
-      fetchOpts.credentials = "omit";
-    else
-      fetchOpts.credentials = "same-origin";
+    else if (link.crossOrigin === "anonymous") fetchOpts.credentials = "omit";
+    else fetchOpts.credentials = "same-origin";
     return fetchOpts;
   }
   function processPreload(link) {
@@ -126,15 +122,15 @@ var BinaryResult = /* @__PURE__ */ ((BinaryResult2) => {
   return BinaryResult2;
 })(BinaryResult || {});
 const map_wasm_imports = (g_imports) => ({
-  a: {
-    f: g_imports.memcpy,
-    a: g_imports.abort,
-    d: g_imports.resize,
-    e: () => 52,
+  undefined: {
+    f: g_imports.undefined,
+    e: g_imports.memcpy,
+    c: g_imports.resize,
+    d: () => 52,
     // _fd_close,
-    c: () => 70,
+    b: () => 70,
     // _fd_seek,
-    b: g_imports.write
+    a: g_imports.write
   }
 });
 const map_wasm_exports = (g_exports) => ({
@@ -151,10 +147,6 @@ const map_wasm_exports = (g_exports) => ({
   ec_pubkey_create: g_exports["t"],
   context_randomize: g_exports["u"],
   ecdh: g_exports["v"],
-  sbrk: g_exports["sbrk"],
-  _emscripten_stack_restore: g_exports["_emscripten_stack_restore"],
-  _emscripten_stack_alloc: g_exports["_emscripten_stack_alloc"],
-  emscripten_stack_get_current: g_exports["emscripten_stack_get_current"],
   memory: g_exports["g"],
   init: () => g_exports["h"]()
 });
@@ -264,8 +256,7 @@ const WasmSecp256k1 = async (z_src) => {
       return BinaryResult.SUCCESS === g_wasm.ecdsa_verify(ip_ctx, ip_sig_lib, ip_msg_hash, ip_pk_lib);
     },
     ecdh(atu8_sk, atu8_pk) {
-      if (!parse_pubkey(atu8_pk))
-        throw Error(S_TAG_ECDH + S_REASON_INVALID_PK);
+      if (!parse_pubkey(atu8_pk)) throw Error(S_TAG_ECDH + S_REASON_INVALID_PK);
       return with_sk(atu8_sk, () => {
         if (BinaryResult.SUCCESS !== g_wasm.ecdh(ip_ctx, ip_sk_shared, ip_pk_lib, ip_sk)) {
           throw Error(S_TAG_ECDH + S_REASON_INVALID_SK);
