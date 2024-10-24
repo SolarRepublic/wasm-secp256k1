@@ -11,6 +11,8 @@ import {map_wasm_exports, map_wasm_imports} from '../gen/wasm.js';
 
 const S_TAG_ECDH = 'ECDH: ';
 const S_TAG_ECDSA_VERIFY = 'ECDSA verify: ';
+const S_TAG_TWEAK_ADD = 'k tweak add: ';
+const S_TAG_TWEAK_MUL = 'k tweak mul: ';
 
 const S_REASON_INVALID_SK = 'Invalid private key';
 const S_REASON_INVALID_PK = 'Invalid public key';
@@ -66,6 +68,38 @@ export interface Secp256k1 {
 	 * @returns the shared secret (32 bytes)
 	 */
 	ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array;
+
+	/**
+	 * Tweak the given private key by adding to it
+	 * @param atu8_sk - the private key (32 bytes)
+	 * @param atu8_tweak - the tweak vector (32 bytes)
+	 * @returns the tweaked private key
+	 */
+	tweak_sk_add(atu8_sk: Uint8Array, atu8_tweak: Uint8Array): Uint8Array;
+
+	/**
+	 * Tweak the given private key by multiplying it
+	 * @param atu8_sk - the private key (32 bytes)
+	 * @param atu8_tweak - the tweak vector (32 bytes)
+	 * @returns the tweaked private key
+	 */
+	tweak_sk_mul(atu8_sk: Uint8Array, atu8_tweak: Uint8Array): Uint8Array;
+
+	/**
+	 * Tweak the given public key by adding to it
+	 * @param atu8_pk - the public key (33 or 65 bytes)
+	 * @param atu8_tweak - the tweak vector (32 bytes)
+	 * @returns the tweaked public key
+	 */
+	tweak_pk_add(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array;
+
+	/**
+	 * Tweak the given public key by multiplying it
+	 * @param atu8_pk - the public key (33 or 65 bytes)
+	 * @param atu8_tweak - the tweak vector (32 bytes)
+	 * @returns the tweaked public key
+	 */
+	tweak_pk_mul(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array;
 }
 
 /**
@@ -241,6 +275,61 @@ export const WasmSecp256k1 = async(
 		return atu8_sk;
 	};
 
+	/**
+	 * Creates a function to tweak a private key using either addition or multiplication
+	 * @param f_tweak - the tweak function
+	 * @param s_tag - the tag to use for error messages
+	 * @returns a tweak function
+	 */
+	const tweak_sk = (f_tweak: typeof g_wasm['ec_seckey_tweak_add'], s_tag: string) => (atu8_sk: Uint8Array, atu8_tweak: Uint8Array) => {
+		// randomize context
+		randomize_context();
+
+		// copy input bytes into place
+		put_bytes(atu8_sk, ip_sk, ByteLens.PRIVATE_KEY);
+
+		// use message hash memory for tweak vector
+		put_bytes(atu8_tweak, ip_msg_hash, ByteLens.MSG_HASH);
+
+		// apply the given tweak to the private key
+		if(BinaryResult.SUCCESS !== f_tweak(ip_ctx, ip_sk, ip_msg_hash)) {
+			// manually clear the private key
+			atu8_sk.fill(0);
+
+			throw Error('s'+s_tag+S_REASON_INVALID_SK);
+		}
+
+		// return tweaked private key
+		return ATU8_HEAP.slice(ip_sk, ip_sk+ByteLens.PRIVATE_KEY);
+	};
+
+	/**
+	 * Creates a function to tweak a public key using either addition or multiplication
+	 * @param f_tweak - the tweak function
+	 * @param s_tag - the tag to use for error messages
+	 * @returns a tweak function
+	 */
+	const tweak_pk = (f_tweak: typeof g_wasm['ec_pubkey_tweak_add'], s_tag: string) => (atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed=false) => {
+		// parse the public key
+		if(!parse_pubkey(atu8_pk)) {
+			throw Error(S_TAG_ECDSA_VERIFY+S_REASON_INVALID_PK);
+		}
+
+		// copy input bytes into place
+		put_bytes(atu8_pk, ip_pk_scratch, ByteLens.PUBLIC_KEY_MAX);
+
+		// use message hash memory for tweak vector
+		put_bytes(atu8_tweak, ip_msg_hash, ByteLens.MSG_HASH);
+
+		// apply the given tweak to the public key
+		if(BinaryResult.SUCCESS !== f_tweak(ip_ctx, ip_pk_lib, ip_msg_hash)) {
+			throw Error('p'+s_tag+S_REASON_INVALID_PK);
+		}
+
+		// return tweaked public key
+		return get_pk(b_uncompressed);
+	};
+
 	return {
 		gen_sk: () => valid_sk(crypto.getRandomValues(bytes(ByteLens.PRIVATE_KEY))),
 
@@ -324,6 +413,14 @@ export const WasmSecp256k1 = async(
 				return ATU8_HEAP.slice(ip_sk_shared, ip_sk_shared+ByteLens.ECDH_SHARED_SK);
 			});
 		},
+
+		tweak_sk_add: tweak_sk(g_wasm.ec_seckey_tweak_add, S_TAG_TWEAK_ADD),
+
+		tweak_sk_mul: tweak_sk(g_wasm.ec_seckey_tweak_mul, S_TAG_TWEAK_MUL),
+
+		tweak_pk_add: tweak_pk(g_wasm.ec_pubkey_tweak_add, S_TAG_TWEAK_ADD),
+
+		tweak_pk_mul: tweak_pk(g_wasm.ec_pubkey_tweak_mul, S_TAG_TWEAK_MUL),
 	};
 };
 
