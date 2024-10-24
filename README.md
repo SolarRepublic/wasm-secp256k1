@@ -204,4 +204,4 @@ The Emscripten-generated js file at `public/out/secp256k1.js` is not needed for 
 
 ## See also
 
-[hash-wasm](https://github.com/Daninet/hash-wasm/tree/master) is a great library that provides performant hashing using optimized WASM binaries. Though its API is asynchronous, it also provides an undocumented synchronous API.
+[hash-wasm](https://github.com/Daninet/hash-wasm/tree/master) is a great library that provides performant hashing using optimized WASM binaries. Though its API is asynchronous, it also provides an undocumented synchronous API. 
