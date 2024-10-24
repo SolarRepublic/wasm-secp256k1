@@ -143,6 +143,38 @@ interface Secp256k1 {
     * @returns the shared secret (32 bytes)
     */
     ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array;
+
+	/**
+	 * Tweak the given private key by adding to it
+	 * @param atu8_sk - the private key (32 bytes)
+	 * @param atu8_tweak - the tweak vector (32 bytes)
+	 * @returns the tweaked private key
+	 */
+	tweak_sk_add(atu8_sk: Uint8Array, atu8_tweak: Uint8Array): Uint8Array;
+
+	/**
+	 * Tweak the given private key by multiplying it
+	 * @param atu8_sk - the private key (32 bytes)
+	 * @param atu8_tweak - the tweak vector (32 bytes)
+	 * @returns the tweaked private key
+	 */
+	tweak_sk_mul(atu8_sk: Uint8Array, atu8_tweak: Uint8Array): Uint8Array;
+
+	/**
+	 * Tweak the given public key by adding to it
+	 * @param atu8_pk - the public key (33 or 65 bytes)
+	 * @param atu8_tweak - the tweak vector (32 bytes)
+	 * @returns the tweaked public key
+	 */
+	tweak_pk_add(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array;
+
+	/**
+	 * Tweak the given public key by multiplying it
+	 * @param atu8_pk - the public key (33 or 65 bytes)
+	 * @param atu8_tweak - the tweak vector (32 bytes)
+	 * @returns the tweaked public key
+	 */
+	tweak_pk_mul(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array;
 }
 ```
 
