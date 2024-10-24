@@ -26,7 +26,7 @@
     "demo": "bun run build && vite dev"
   },
   "dependencies": {
-    "@blake.regalia/belt": "^0.40.0"
+    "@blake.regalia/belt": "^0.40.1"
   },
   "devDependencies": {
     "@blake.regalia/eslint-config-elite": "^0.4.4",
