@@ -33,6 +33,10 @@ s_exports='''
   "_secp256k1_ec_pubkey_create"
   "_secp256k1_ec_pubkey_parse"
   "_secp256k1_ec_pubkey_serialize"
+  "_secp256k1_ec_seckey_tweak_add"
+  "_secp256k1_ec_seckey_tweak_mul"
+  "_secp256k1_ec_pubkey_tweak_add"
+  "_secp256k1_ec_pubkey_tweak_mul"
   "_secp256k1_ecdh"
   "_secp256k1_ecdsa_signature_parse_compact"
   "_secp256k1_ecdsa_signature_serialize_compact"
@@ -54,9 +58,6 @@ fi
 # join list to string
 sx_funcs=$(join "$s_exports" ',')
 
-# clean
-emmake make clean
-
 # workaround for <https://github.com/emscripten-core/emscripten/issues/13551>
 echo '{"type":"commonjs"}' > package.json
 
@@ -70,6 +71,7 @@ emconfigure ./configure \
   --enable-module-schnorrsig=no \
   --enable-module-ellswift=no \
   --enable-module-extrakeys=no \
+  --enable-module-musig=no \
   --with-ecmult-window=4 \
   --with-ecmult-gen-precision=2 \
   --disable-shared \
@@ -110,6 +112,9 @@ emcc src/precompute_ecmult-precompute_ecmult.o \
   -s MINIMAL_RUNTIME=1 \
   -s NO_EXIT_RUNTIME=1 \
   -o out/secp256k1.js
+
+# pretty print
+npx js-beautify -rf out/secp256k1.js
 
 # verify
 ls -lah out/

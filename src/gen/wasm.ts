@@ -33,6 +33,10 @@ export interface WasmExportsExtension extends WasmExports {
 	ecdsa_sign: Function;
 	ec_seckey_verify: Function;
 	ec_pubkey_create: Function;
+	ec_seckey_tweak_add: Function;
+	ec_pubkey_tweak_add: Function;
+	ec_seckey_tweak_mul: Function;
+	ec_pubkey_tweak_mul: Function;
 	context_randomize: Function;
 	ecdh: Function;
 }
@@ -62,8 +66,12 @@ export const map_wasm_exports = <
 	ecdsa_sign: g_exports['r'],
 	ec_seckey_verify: g_exports['s'],
 	ec_pubkey_create: g_exports['t'],
-	context_randomize: g_exports['u'],
-	ecdh: g_exports['v'],
+	ec_seckey_tweak_add: g_exports['u'],
+	ec_pubkey_tweak_add: g_exports['v'],
+	ec_seckey_tweak_mul: g_exports['w'],
+	ec_pubkey_tweak_mul: g_exports['x'],
+	context_randomize: g_exports['y'],
+	ecdh: g_exports['z'],
 	memory: g_exports['g'],
 
 	init: () => (g_exports['h'] as VoidFunction)(),

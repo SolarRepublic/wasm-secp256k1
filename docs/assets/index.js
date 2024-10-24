@@ -145,13 +145,19 @@ const map_wasm_exports = (g_exports) => ({
   ecdsa_sign: g_exports["r"],
   ec_seckey_verify: g_exports["s"],
   ec_pubkey_create: g_exports["t"],
-  context_randomize: g_exports["u"],
-  ecdh: g_exports["v"],
+  ec_seckey_tweak_add: g_exports["u"],
+  ec_pubkey_tweak_add: g_exports["v"],
+  ec_seckey_tweak_mul: g_exports["w"],
+  ec_pubkey_tweak_mul: g_exports["x"],
+  context_randomize: g_exports["y"],
+  ecdh: g_exports["z"],
   memory: g_exports["g"],
   init: () => g_exports["h"]()
 });
 const S_TAG_ECDH = "ECDH: ";
 const S_TAG_ECDSA_VERIFY = "ECDSA verify: ";
+const S_TAG_TWEAK_ADD = "k tweak add: ";
+const S_TAG_TWEAK_MUL = "k tweak mul: ";
 const S_REASON_INVALID_SK = "Invalid private key";
 const S_REASON_INVALID_PK = "Invalid public key";
 const random_32 = () => crypto.getRandomValues(bytes(32));
@@ -217,6 +223,27 @@ const WasmSecp256k1 = async (z_src) => {
     }
     return atu8_sk;
   };
+  const tweak_sk = (f_tweak, s_tag) => (atu8_sk, atu8_tweak) => {
+    randomize_context();
+    put_bytes(atu8_sk, ip_sk, ByteLens.PRIVATE_KEY);
+    put_bytes(atu8_tweak, ip_msg_hash, ByteLens.MSG_HASH);
+    if (BinaryResult.SUCCESS !== f_tweak(ip_ctx, ip_sk, ip_msg_hash)) {
+      atu8_sk.fill(0);
+      throw Error("s" + s_tag + S_REASON_INVALID_SK);
+    }
+    return ATU8_HEAP.slice(ip_sk, ip_sk + ByteLens.PRIVATE_KEY);
+  };
+  const tweak_pk = (f_tweak, s_tag) => (atu8_pk, atu8_tweak, b_uncompressed = false) => {
+    if (!parse_pubkey(atu8_pk)) {
+      throw Error(S_TAG_ECDSA_VERIFY + S_REASON_INVALID_PK);
+    }
+    put_bytes(atu8_pk, ip_pk_scratch, ByteLens.PUBLIC_KEY_MAX);
+    put_bytes(atu8_tweak, ip_msg_hash, ByteLens.MSG_HASH);
+    if (BinaryResult.SUCCESS !== f_tweak(ip_ctx, ip_pk_lib, ip_msg_hash)) {
+      throw Error("p" + s_tag + S_REASON_INVALID_PK);
+    }
+    return get_pk(b_uncompressed);
+  };
   return {
     gen_sk: () => valid_sk(crypto.getRandomValues(bytes(ByteLens.PRIVATE_KEY))),
     valid_sk,
@@ -263,7 +290,11 @@ const WasmSecp256k1 = async (z_src) => {
         }
         return ATU8_HEAP.slice(ip_sk_shared, ip_sk_shared + ByteLens.ECDH_SHARED_SK);
       });
-    }
+    },
+    tweak_sk_add: tweak_sk(g_wasm.ec_seckey_tweak_add, S_TAG_TWEAK_ADD),
+    tweak_sk_mul: tweak_sk(g_wasm.ec_seckey_tweak_mul, S_TAG_TWEAK_MUL),
+    tweak_pk_add: tweak_pk(g_wasm.ec_pubkey_tweak_add, S_TAG_TWEAK_ADD),
+    tweak_pk_mul: tweak_pk(g_wasm.ec_pubkey_tweak_mul, S_TAG_TWEAK_MUL)
   };
 };
 const elem = (si_id) => document.getElementById(si_id);

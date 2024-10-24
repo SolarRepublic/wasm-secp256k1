@@ -180,6 +180,90 @@ export interface Secp256k1WasmCore extends WasmExportsExtension {
 		ip_pk_in: PointerPubkey,
 		xm_flags: Flags,
 	): BinaryResult.SUCCESS;
+
+
+	/** Tweak a secret key by adding tweak to it.
+	 *
+	 *  Returns: 0 if the arguments are invalid or the resulting secret key would be
+	 *           invalid (only when the tweak is the negation of the secret key). 1
+	 *           otherwise.
+	 *  Args:    ctx:   pointer to a context object.
+	 *  In/Out: seckey: pointer to a 32-byte secret key. If the secret key is
+	 *                  invalid according to secp256k1_ec_seckey_verify, this
+	 *                  function returns 0. seckey will be set to some unspecified
+	 *                  value if this function returns 0.
+	 *  In:    tweak32: pointer to a 32-byte tweak, which must be valid according to
+	 *                  secp256k1_ec_seckey_verify or 32 zero bytes. For uniformly
+	 *                  random 32-byte tweaks, the chance of being invalid is
+	 *                  negligible (around 1 in 2^128).
+	 */
+	ec_seckey_tweak_add(
+		this: void,
+		ip_ctx: PointerContext,
+		ip_sk_inout: Pointer<32>,
+		ip_tweak_in: Pointer<32>,
+	): BinaryResult.SUCCESS;
+
+
+	/** Tweak a secret key by multiplying it by a tweak.
+	 *
+	 *  Returns: 0 if the arguments are invalid. 1 otherwise.
+	 *  Args:   ctx:    pointer to a context object.
+	 *  In/Out: seckey: pointer to a 32-byte secret key. If the secret key is
+	 *                  invalid according to secp256k1_ec_seckey_verify, this
+	 *                  function returns 0. seckey will be set to some unspecified
+	 *                  value if this function returns 0.
+	 *  In:    tweak32: pointer to a 32-byte tweak. If the tweak is invalid according to
+	 *                  secp256k1_ec_seckey_verify, this function returns 0. For
+	 *                  uniformly random 32-byte arrays the chance of being invalid
+	 *                  is negligible (around 1 in 2^128).
+	 */
+	ec_seckey_tweak_mul(
+		this: void,
+		ip_ctx: PointerContext,
+		ip_sk_inout: Pointer<32>,
+		ip_tweak_in: Pointer<32>,
+	): BinaryResult.SUCCESS;
+
+
+	/** Tweak a public key by adding tweak times the generator to it.
+	 *
+	 *  Returns: 0 if the arguments are invalid or the resulting public key would be
+	 *           invalid (only when the tweak is the negation of the corresponding
+	 *           secret key). 1 otherwise.
+	 *  Args:    ctx:   pointer to a context object.
+	 *  In/Out: pubkey: pointer to a public key object. pubkey will be set to an
+	 *                  invalid value if this function returns 0.
+	 *  In:    tweak32: pointer to a 32-byte tweak, which must be valid according to
+	 *                  secp256k1_ec_seckey_verify or 32 zero bytes. For uniformly
+	 *                  random 32-byte tweaks, the chance of being invalid is
+	 *                  negligible (around 1 in 2^128).
+	 */
+	ec_pubkey_tweak_add(
+		this: void,
+		ip_ctx: PointerContext,
+		ip_pk_inout: PointerPubkey,
+		ip_tweak_in: Pointer<32>,
+	): BinaryResult.SUCCESS;
+
+
+	/** Tweak a public key by multiplying it by a tweak value.
+	 *
+	 *  Returns: 0 if the arguments are invalid. 1 otherwise.
+	 *  Args:    ctx:   pointer to a context object.
+	 *  In/Out: pubkey: pointer to a public key object. pubkey will be set to an
+	 *                  invalid value if this function returns 0.
+	 *  In:    tweak32: pointer to a 32-byte tweak. If the tweak is invalid according to
+	 *                  secp256k1_ec_seckey_verify, this function returns 0. For
+	 *                  uniformly random 32-byte arrays the chance of being invalid
+	 *                  is negligible (around 1 in 2^128).
+	 */
+	ec_pubkey_tweak_mul(
+		this: void,
+		ip_ctx: PointerContext,
+		ip_pk_inout: PointerPubkey,
+		ip_tweak_in: Pointer<32>,
+	): BinaryResult.SUCCESS;
 }
 
 
