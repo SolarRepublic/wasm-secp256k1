@@ -66,8 +66,9 @@ export interface Secp256k1 {
 	 * Recovers a public key from the given signature and recovery ID
 	 * @param atu8_signature - compact signature in `r || s` form (64 bytes)
 	 * @param xc_recovery - the recovery ID
+	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
 	 */
-	recover(atu8_signature: Uint8Array, atu8_hash: Uint8Array, xc_recovery: number): Uint8Array;
+	recover(atu8_signature: Uint8Array, atu8_hash: Uint8Array, xc_recovery: number, b_uncompressed?: boolean): Uint8Array;
 
 	/**
 	 * ECDH key exchange. Computes a shared secret given a private key some public key
