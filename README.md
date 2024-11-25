@@ -142,12 +142,12 @@ interface Secp256k1 {
     */
     verify(atu8_signature: Uint8Array, atu8_hash: Uint8Array, atu8_pk: Uint8Array): boolean;
 
-	/**
-	 * Recovers a public key from the given signature and recovery ID
-	 * @param atu8_signature - compact signature in `r || s` form (64 bytes)
-	 * @param xc_recovery - the recovery ID
-	 */
-	recover(atu8_signature: Uint8Array, atu8_hash: Uint8Array, xc_recovery: number): Uint8Array;
+    /**
+     * Recovers a public key from the given signature and recovery ID
+     * @param atu8_signature - compact signature in `r || s` form (64 bytes)
+     * @param xc_recovery - the recovery ID
+     */
+    recover(atu8_signature: Uint8Array, atu8_hash: Uint8Array, xc_recovery: number): Uint8Array;
 
     /**
     * ECDH key exchange. Computes a shared secret given a private key some public key
