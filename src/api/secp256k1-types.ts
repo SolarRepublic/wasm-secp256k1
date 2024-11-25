@@ -32,6 +32,7 @@ export const enum ByteLens {
 
 	ECDSA_SIG_COMPACT = 64,
 	ECDSA_SIG_LIB = 64,  // secp256k1_ecdsa_signature: char [64];
+	ECDSA_SIG_RECOVERABLE = 65,  // secp256k1_ecdsa_recoverable_signature: char [65];
 
 	MSG_HASH = 32,
 	NONCE_ENTROPY = 32,
@@ -438,6 +439,23 @@ export interface Secp256k1WasmEcdsaRecovery {
 		ip_sk_in: Pointer<32>,
 		ip_noncefn_in: PointerNonceFn,
 		ip_ent_in: Pointer<32>,
+	): BinaryResult;
+
+
+	/** Recover an ECDSA public key from a signature.
+	 *
+	 *  Returns: 1: public key successfully recovered (which guarantees a correct signature).
+	 *           0: otherwise.
+	 *  Args:    ctx:       pointer to a context object.
+	 *  Out:     pubkey:    pointer to the recovered public key.
+	 *  In:      sig:       pointer to initialized signature that supports pubkey recovery.
+	 *           msghash32: the 32-byte message hash assumed to be signed.
+	 */
+	ecdsa_recover(
+		ip_ctx: PointerContext,
+		ip_pk_out: PointerPubkey,
+		ip_sig_in: PointerSigRecoverable,
+		ip_hash_in: Pointer<32>,
 	): BinaryResult;
 }
 

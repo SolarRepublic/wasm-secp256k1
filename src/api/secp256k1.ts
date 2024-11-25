@@ -1,4 +1,4 @@
-import type {PointerNonceFn, PointerPubkey, PointerSeed, PointerSig, Secp256k1WasmCore, Secp256k1WasmEcdh, Secp256k1WasmEcdsaRaw} from './secp256k1-types.js';
+import type {PointerNonceFn, PointerPubkey, PointerSeed, PointerSig, PointerSigRecoverable, RecoveryValue, Secp256k1WasmCore, Secp256k1WasmEcdh, Secp256k1WasmEcdsaRaw, Secp256k1WasmEcdsaRecovery, SignatureAndRecovery} from './secp256k1-types.js';
 import type {ByteSize, Pointer} from '../types.js';
 import type {Promisable} from '@blake.regalia/belt';
 
@@ -16,6 +16,7 @@ const S_TAG_TWEAK_MUL = 'k tweak mul: ';
 
 const S_REASON_INVALID_SK = 'Invalid private key';
 const S_REASON_INVALID_PK = 'Invalid public key';
+const S_REASON_UNPARSEABLE_SIG = 'Unparseable signature';
 
 const random_32 = () => crypto.getRandomValues(bytes(32));
 
@@ -49,9 +50,9 @@ export interface Secp256k1 {
 	 * @param atu8_sk - the private key
 	 * @param atu8_hash - the message hash (32 bytes)
 	 * @param atu8_entropy - optional entropy to use
-	 * @returns compact signature (64 bytes) as concatenation of `r || s`
+	 * @returns tuple of [compact signature (64 bytes) as concatenation of `r || s`, recovery ID byte]
 	 */
-	sign(atu8_sk: Uint8Array, atu8_hash: Uint8Array, atu8_ent?: Uint8Array): Uint8Array;
+	sign(atu8_sk: Uint8Array, atu8_hash: Uint8Array, atu8_ent?: Uint8Array): SignatureAndRecovery;
 
 	/**
 	 * Verifies the signature is valid for the given message hash and public key
@@ -60,6 +61,13 @@ export interface Secp256k1 {
 	 * @param atu8_pk - the public key
 	 */
 	verify(atu8_signature: Uint8Array, atu8_hash: Uint8Array, atu8_pk: Uint8Array): boolean;
+
+	/**
+	 * Recovers a public key from the given signature and recovery ID
+	 * @param atu8_signature - compact signature in `r || s` form (64 bytes)
+	 * @param xc_recovery - the recovery ID
+	 */
+	recover(atu8_signature: Uint8Array, atu8_hash: Uint8Array, xc_recovery: number): Uint8Array;
 
 	/**
 	 * ECDH key exchange. Computes a shared secret given a private key some public key
@@ -131,6 +139,7 @@ export const WasmSecp256k1 = async(
 		Secp256k1WasmCore
 		& Secp256k1WasmEcdh
 		& Secp256k1WasmEcdsaRaw
+		& Secp256k1WasmEcdsaRecovery
 	>(d_wasm.instance.exports);
 
 	// bind the heap and ref its view(s)
@@ -157,6 +166,12 @@ export const WasmSecp256k1 = async(
 
 	// library handle: secp256k1_ecdsa_signature
 	const ip_sig_lib = malloc<PointerSig>(ByteLens.ECDSA_SIG_LIB);
+
+	// library handle: secp256k1_ecdsa_signature
+	const ip_sig_rcvr_lib = malloc<PointerSigRecoverable>(ByteLens.ECDSA_SIG_RECOVERABLE);
+
+	// recovery id byte
+	const ip_v = malloc(4);
 
 	// create a reusable context
 	const ip_ctx = g_wasm.context_create(Flags.CONTEXT_SIGN | Flags.CONTEXT_VERIFY);
@@ -359,9 +374,9 @@ export const WasmSecp256k1 = async(
 			put_bytes(atu8_ent, ip_ent, ByteLens.NONCE_ENTROPY);
 
 			// while using the private key, sign the given message hash
-			if(BinaryResult.SUCCESS !== with_sk(atu8_sk, () => g_wasm.ecdsa_sign(
+			if(BinaryResult.SUCCESS !== with_sk(atu8_sk, () => g_wasm.ecdsa_sign_recoverable(
 				ip_ctx,
-				ip_sig_lib,
+				ip_sig_rcvr_lib,
 				ip_msg_hash,
 				ip_sk,
 				0 as PointerNonceFn,
@@ -371,10 +386,13 @@ export const WasmSecp256k1 = async(
 			}
 
 			// serialize the signature in compact form as `r || s` (64 bytes)
-			g_wasm.ecdsa_signature_serialize_compact(ip_ctx, ip_sig_scratch, ip_sig_lib);
+			g_wasm.ecdsa_recoverable_signature_serialize_compact(ip_ctx, ip_sig_scratch, ip_v, ip_sig_rcvr_lib);
 
 			// return serialized signature
-			return ATU8_HEAP.slice(ip_sig_scratch, ip_sig_scratch+ByteLens.ECDSA_SIG_COMPACT);
+			return [
+				ATU8_HEAP.slice(ip_sig_scratch, ip_sig_scratch+ByteLens.ECDSA_SIG_COMPACT),
+				ATU8_HEAP[ip_v] as RecoveryValue,  // terminal byte of 32-bit uint
+			];
 		},
 
 		verify(atu8_signature, atu8_hash, atu8_pk) {
@@ -391,11 +409,32 @@ export const WasmSecp256k1 = async(
 
 			// parse the signature
 			if(BinaryResult.SUCCESS !== g_wasm.ecdsa_signature_parse_compact(ip_ctx, ip_sig_lib, ip_sig_scratch)) {
-				throw Error(S_TAG_ECDSA_VERIFY+'Unparseable signature');
+				throw Error(S_TAG_ECDSA_VERIFY+S_REASON_UNPARSEABLE_SIG);
 			}
 
 			// verify the signature
 			return BinaryResult.SUCCESS === g_wasm.ecdsa_verify(ip_ctx, ip_sig_lib, ip_msg_hash, ip_pk_lib);
+		},
+
+		recover(atu8_signature, atu8_hash, xc_recovery, b_uncompressed=false) {
+			// copy signature bytes into place
+			put_bytes(atu8_signature, ip_sig_scratch, ByteLens.ECDSA_SIG_COMPACT);
+
+			// parse the recoverable signature
+			if(BinaryResult.SUCCESS !== g_wasm.ecdsa_recoverable_signature_parse_compact(ip_ctx, ip_sig_rcvr_lib, ip_sig_scratch, xc_recovery)) {
+				throw Error(S_TAG_ECDSA_VERIFY+S_REASON_UNPARSEABLE_SIG);
+			}
+
+			// copy message hash bytes into place
+			put_bytes(atu8_hash, ip_msg_hash, ByteLens.MSG_HASH);
+
+			// recover the public key
+			if(BinaryResult.SUCCESS !== g_wasm.ecdsa_recover(ip_ctx, ip_pk_lib, ip_sig_rcvr_lib, ip_msg_hash)) {
+				throw Error(S_TAG_ECDSA_VERIFY+'Invalid signature');
+			}
+
+			// return recovered public key
+			return get_pk(b_uncompressed);
 		},
 
 		ecdh(atu8_sk, atu8_pk) {

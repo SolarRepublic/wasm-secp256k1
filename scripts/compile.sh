@@ -39,9 +39,11 @@ s_exports='''
   "_secp256k1_ec_pubkey_tweak_mul"
   "_secp256k1_ecdh"
   "_secp256k1_ecdsa_signature_parse_compact"
-  "_secp256k1_ecdsa_signature_serialize_compact"
-  "_secp256k1_ecdsa_sign"
   "_secp256k1_ecdsa_verify"
+  "_secp256k1_ecdsa_recoverable_signature_parse_compact"
+  "_secp256k1_ecdsa_recoverable_signature_serialize_compact"
+  "_secp256k1_ecdsa_sign_recoverable"
+  "_secp256k1_ecdsa_recover"
 '''
 
 append_export() {

@@ -102,6 +102,7 @@ var ByteLens = /* @__PURE__ */ ((ByteLens2) => {
   ByteLens2[ByteLens2["PUBLIC_KEY_MAX"] = 65] = "PUBLIC_KEY_MAX";
   ByteLens2[ByteLens2["ECDSA_SIG_COMPACT"] = 64] = "ECDSA_SIG_COMPACT";
   ByteLens2[ByteLens2["ECDSA_SIG_LIB"] = 64] = "ECDSA_SIG_LIB";
+  ByteLens2[ByteLens2["ECDSA_SIG_RECOVERABLE"] = 65] = "ECDSA_SIG_RECOVERABLE";
   ByteLens2[ByteLens2["MSG_HASH"] = 32] = "MSG_HASH";
   ByteLens2[ByteLens2["NONCE_ENTROPY"] = 32] = "NONCE_ENTROPY";
   ByteLens2[ByteLens2["SHA256"] = 104] = "SHA256";
@@ -140,17 +141,19 @@ const map_wasm_exports = (g_exports) => ({
   ec_pubkey_parse: g_exports["m"],
   ec_pubkey_serialize: g_exports["n"],
   ecdsa_signature_parse_compact: g_exports["o"],
-  ecdsa_signature_serialize_compact: g_exports["p"],
-  ecdsa_verify: g_exports["q"],
-  ecdsa_sign: g_exports["r"],
-  ec_seckey_verify: g_exports["s"],
-  ec_pubkey_create: g_exports["t"],
-  ec_seckey_tweak_add: g_exports["u"],
-  ec_pubkey_tweak_add: g_exports["v"],
-  ec_seckey_tweak_mul: g_exports["w"],
-  ec_pubkey_tweak_mul: g_exports["x"],
-  context_randomize: g_exports["y"],
-  ecdh: g_exports["z"],
+  ecdsa_verify: g_exports["p"],
+  ec_seckey_verify: g_exports["q"],
+  ec_pubkey_create: g_exports["r"],
+  ec_seckey_tweak_add: g_exports["s"],
+  ec_pubkey_tweak_add: g_exports["t"],
+  ec_seckey_tweak_mul: g_exports["u"],
+  ec_pubkey_tweak_mul: g_exports["v"],
+  context_randomize: g_exports["w"],
+  ecdh: g_exports["x"],
+  ecdsa_recoverable_signature_parse_compact: g_exports["y"],
+  ecdsa_recoverable_signature_serialize_compact: g_exports["z"],
+  ecdsa_sign_recoverable: g_exports["A"],
+  ecdsa_recover: g_exports["B"],
   memory: g_exports["g"],
   init: () => g_exports["h"]()
 });
@@ -160,6 +163,7 @@ const S_TAG_TWEAK_ADD = "k tweak add: ";
 const S_TAG_TWEAK_MUL = "k tweak mul: ";
 const S_REASON_INVALID_SK = "Invalid private key";
 const S_REASON_INVALID_PK = "Invalid public key";
+const S_REASON_UNPARSEABLE_SIG = "Unparseable signature";
 const random_32 = () => crypto.getRandomValues(bytes(32));
 const WasmSecp256k1 = async (z_src) => {
   const [g_imports, f_bind_heap] = emsimp(map_wasm_imports, "wasm-secp256k1");
@@ -182,6 +186,8 @@ const WasmSecp256k1 = async (z_src) => {
   const ip_pk_scratch = malloc(ByteLens.PUBLIC_KEY_MAX);
   const ip_pk_lib = malloc(ByteLens.PUBLIC_KEY_LIB);
   const ip_sig_lib = malloc(ByteLens.ECDSA_SIG_LIB);
+  const ip_sig_rcvr_lib = malloc(ByteLens.ECDSA_SIG_RECOVERABLE);
+  const ip_v = malloc(4);
   const ip_ctx = g_wasm.context_create(Flags.CONTEXT_SIGN | Flags.CONTEXT_VERIFY);
   const ip_len = g_wasm.malloc(4);
   const ip32_len = ip_len >> 2;
@@ -258,9 +264,9 @@ const WasmSecp256k1 = async (z_src) => {
       randomize_context();
       put_bytes(atu8_hash, ip_msg_hash, ByteLens.MSG_HASH);
       put_bytes(atu8_ent, ip_ent, ByteLens.NONCE_ENTROPY);
-      if (BinaryResult.SUCCESS !== with_sk(atu8_sk, () => g_wasm.ecdsa_sign(
+      if (BinaryResult.SUCCESS !== with_sk(atu8_sk, () => g_wasm.ecdsa_sign_recoverable(
         ip_ctx,
-        ip_sig_lib,
+        ip_sig_rcvr_lib,
         ip_msg_hash,
         ip_sk,
         0,
@@ -268,8 +274,12 @@ const WasmSecp256k1 = async (z_src) => {
       ))) {
         throw Error("ECDSA sign: " + S_REASON_INVALID_SK);
       }
-      g_wasm.ecdsa_signature_serialize_compact(ip_ctx, ip_sig_scratch, ip_sig_lib);
-      return ATU8_HEAP.slice(ip_sig_scratch, ip_sig_scratch + ByteLens.ECDSA_SIG_COMPACT);
+      g_wasm.ecdsa_recoverable_signature_serialize_compact(ip_ctx, ip_sig_scratch, ip_v, ip_sig_rcvr_lib);
+      return [
+        ATU8_HEAP.slice(ip_sig_scratch, ip_sig_scratch + ByteLens.ECDSA_SIG_COMPACT),
+        ATU8_HEAP.slice(ip_v, ip_v + 4)[3]
+        // terminal byte of 32-bit uint
+      ];
     },
     verify(atu8_signature, atu8_hash, atu8_pk) {
       put_bytes(atu8_signature, ip_sig_scratch, ByteLens.ECDSA_SIG_COMPACT);
@@ -278,9 +288,20 @@ const WasmSecp256k1 = async (z_src) => {
         throw Error(S_TAG_ECDSA_VERIFY + S_REASON_INVALID_PK);
       }
       if (BinaryResult.SUCCESS !== g_wasm.ecdsa_signature_parse_compact(ip_ctx, ip_sig_lib, ip_sig_scratch)) {
-        throw Error(S_TAG_ECDSA_VERIFY + "Unparseable signature");
+        throw Error(S_TAG_ECDSA_VERIFY + S_REASON_UNPARSEABLE_SIG);
       }
       return BinaryResult.SUCCESS === g_wasm.ecdsa_verify(ip_ctx, ip_sig_lib, ip_msg_hash, ip_pk_lib);
+    },
+    recover(atu8_signature, atu8_hash, xc_recovery, b_uncompressed = false) {
+      put_bytes(atu8_signature, ip_sig_scratch, ByteLens.ECDSA_SIG_COMPACT);
+      if (BinaryResult.SUCCESS !== g_wasm.ecdsa_recoverable_signature_parse_compact(ip_ctx, ip_sig_rcvr_lib, ip_sig_scratch, xc_recovery)) {
+        throw Error(S_TAG_ECDSA_VERIFY + S_REASON_UNPARSEABLE_SIG);
+      }
+      put_bytes(atu8_hash, ip_msg_hash, ByteLens.MSG_HASH);
+      if (BinaryResult.SUCCESS !== g_wasm.ecdsa_recover(ip_ctx, ip_pk_lib, ip_sig_rcvr_lib, ip_msg_hash)) {
+        throw Error(S_TAG_ECDSA_VERIFY + "Invalid signature");
+      }
+      return get_pk(b_uncompressed);
     },
     ecdh(atu8_sk, atu8_pk) {
       if (!parse_pubkey(atu8_pk)) throw Error(S_TAG_ECDH + S_REASON_INVALID_PK);
@@ -300,6 +321,7 @@ const WasmSecp256k1 = async (z_src) => {
 const elem = (si_id) => document.getElementById(si_id);
 const dm_sk = elem("sk");
 const dm_pk = elem("pk");
+const dm_v = elem("v");
 const dm_msg = elem("msg");
 const dm_hash = elem("hash");
 const dm_sig_r = elem("sig_r");
@@ -312,6 +334,7 @@ const dm_verified = elem("verified");
   let atu8_pk;
   let atu8_hash;
   let atu8_sig;
+  let xc_recovery;
   function sk_err(s_msg) {
     dm_pk.value = s_msg;
     dm_hash.value = dm_sig_r.value = dm_sig_s.value = dm_verified.value = "";
@@ -339,12 +362,13 @@ const dm_verified = elem("verified");
     atu8_hash = await sha256(text_to_bytes(dm_msg.value));
     dm_hash.value = bytes_to_hex(atu8_hash);
     try {
-      atu8_sig = k_secp.sign(atu8_sk, atu8_hash);
+      [atu8_sig, xc_recovery] = k_secp.sign(atu8_sk, atu8_hash);
     } catch (e_convert) {
       return dm_sig_r.value = e_convert.message;
     }
     dm_sig_r.value = bytes_to_hex(atu8_sig.subarray(0, 32));
     dm_sig_s.value = bytes_to_hex(atu8_sig.subarray(32));
+    dm_v.value = xc_recovery + "";
     try {
       k_secp.verify(atu8_sig, atu8_hash, atu8_pk);
     } catch (e_verify) {
