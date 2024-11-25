@@ -67,10 +67,13 @@ const sk = secp256k1.gen_sk()
 const pk = secp256k1.sk_to_pk(sk);
 
 // sign a message hash (caller is responsible for actually hashing the message and providing entropy)
-const signed = secp256k1.sign(sk, messageHash, entropy);
+const [signature, recoveryId] = secp256k1.sign(sk, messageHash, entropy);
 
 // verify a given message hash is signed by some public key
-const verified = secp256k1.verify(signed, messageHash, pk);
+const verified = secp256k1.verify(signature, messageHash, pk);
+
+// recovers a public key from a signature, message hash, and recovery ID
+const recovered = secp256k1.recover(signature, messageHash, recoveryId);
 
 // derive a shared secret with some other's public key
 const shared = secp256k1.ecdh(sk, otherPk);
@@ -124,9 +127,12 @@ interface Secp256k1 {
     * @param atu8_sk - the private key
     * @param atu8_hash - the message hash (32 bytes)
     * @param atu8_entropy - optional entropy to use
-    * @returns compact signature (64 bytes) as concatenation of `r || s`
+    * @returns tuple of [compact signature (64 bytes) as concatenation of `r || s`, recovery ID byte]
     */
-    sign(atu8_sk: Uint8Array, atu8_hash: Uint8Array, atu8_ent?: Uint8Array): Uint8Array;
+    sign(atu8_sk: Uint8Array, atu8_hash: Uint8Array, atu8_ent?: Uint8Array): [
+        atu8_signature: Uint8Array,
+        xc_recovery: RecoveryValue,
+    ];
 
     /**
     * Verifies the signature is valid for the given message hash and public key
@@ -135,6 +141,13 @@ interface Secp256k1 {
     * @param atu8_pk - the public key
     */
     verify(atu8_signature: Uint8Array, atu8_hash: Uint8Array, atu8_pk: Uint8Array): boolean;
+
+	/**
+	 * Recovers a public key from the given signature and recovery ID
+	 * @param atu8_signature - compact signature in `r || s` form (64 bytes)
+	 * @param xc_recovery - the recovery ID
+	 */
+	recover(atu8_signature: Uint8Array, atu8_hash: Uint8Array, xc_recovery: number): Uint8Array;
 
     /**
     * ECDH key exchange. Computes a shared secret given a private key some public key

@@ -28,9 +28,7 @@ export interface WasmExportsExtension extends WasmExports {
 	ec_pubkey_parse: Function;
 	ec_pubkey_serialize: Function;
 	ecdsa_signature_parse_compact: Function;
-	ecdsa_signature_serialize_compact: Function;
 	ecdsa_verify: Function;
-	ecdsa_sign: Function;
 	ec_seckey_verify: Function;
 	ec_pubkey_create: Function;
 	ec_seckey_tweak_add: Function;
@@ -39,6 +37,10 @@ export interface WasmExportsExtension extends WasmExports {
 	ec_pubkey_tweak_mul: Function;
 	context_randomize: Function;
 	ecdh: Function;
+	ecdsa_recoverable_signature_parse_compact: Function;
+	ecdsa_recoverable_signature_serialize_compact: Function;
+	ecdsa_sign_recoverable: Function;
+	ecdsa_recover: Function;
 }
 
 export const map_wasm_imports = (g_imports: WasmImportsExtension) => ({
@@ -61,17 +63,19 @@ export const map_wasm_exports = <
 	ec_pubkey_parse: g_exports['m'],
 	ec_pubkey_serialize: g_exports['n'],
 	ecdsa_signature_parse_compact: g_exports['o'],
-	ecdsa_signature_serialize_compact: g_exports['p'],
-	ecdsa_verify: g_exports['q'],
-	ecdsa_sign: g_exports['r'],
-	ec_seckey_verify: g_exports['s'],
-	ec_pubkey_create: g_exports['t'],
-	ec_seckey_tweak_add: g_exports['u'],
-	ec_pubkey_tweak_add: g_exports['v'],
-	ec_seckey_tweak_mul: g_exports['w'],
-	ec_pubkey_tweak_mul: g_exports['x'],
-	context_randomize: g_exports['y'],
-	ecdh: g_exports['z'],
+	ecdsa_verify: g_exports['p'],
+	ec_seckey_verify: g_exports['q'],
+	ec_pubkey_create: g_exports['r'],
+	ec_seckey_tweak_add: g_exports['s'],
+	ec_pubkey_tweak_add: g_exports['t'],
+	ec_seckey_tweak_mul: g_exports['u'],
+	ec_pubkey_tweak_mul: g_exports['v'],
+	context_randomize: g_exports['w'],
+	ecdh: g_exports['x'],
+	ecdsa_recoverable_signature_parse_compact: g_exports['y'],
+	ecdsa_recoverable_signature_serialize_compact: g_exports['z'],
+	ecdsa_sign_recoverable: g_exports['A'],
+	ecdsa_recover: g_exports['B'],
 	memory: g_exports['g'],
 
 	init: () => (g_exports['h'] as VoidFunction)(),
