@@ -277,7 +277,7 @@ const WasmSecp256k1 = async (z_src) => {
       g_wasm.ecdsa_recoverable_signature_serialize_compact(ip_ctx, ip_sig_scratch, ip_v, ip_sig_rcvr_lib);
       return [
         ATU8_HEAP.slice(ip_sig_scratch, ip_sig_scratch + ByteLens.ECDSA_SIG_COMPACT),
-        ATU8_HEAP.slice(ip_v, ip_v + 4)[3]
+        ATU8_HEAP[ip_v]
         // terminal byte of 32-bit uint
       ];
     },
@@ -321,6 +321,7 @@ const WasmSecp256k1 = async (z_src) => {
 const elem = (si_id) => document.getElementById(si_id);
 const dm_sk = elem("sk");
 const dm_pk = elem("pk");
+const dm_pkr = elem("pkr");
 const dm_v = elem("v");
 const dm_msg = elem("msg");
 const dm_hash = elem("hash");
@@ -335,6 +336,7 @@ const dm_verified = elem("verified");
   let atu8_hash;
   let atu8_sig;
   let xc_recovery;
+  let atu8_pkr;
   function sk_err(s_msg) {
     dm_pk.value = s_msg;
     dm_hash.value = dm_sig_r.value = dm_sig_s.value = dm_verified.value = "";
@@ -374,6 +376,15 @@ const dm_verified = elem("verified");
     } catch (e_verify) {
       return dm_verified.value = e_verify.message;
     }
+    try {
+      atu8_pkr = k_secp.recover(atu8_sig, atu8_hash, xc_recovery);
+    } catch (e_recover) {
+      return dm_verified.value = e_recover.message;
+    }
+    if (bytes_to_hex(atu8_pk) !== bytes_to_hex(atu8_pkr)) {
+      return dm_verified.value = `Recovered public keys do not match!`;
+    }
+    dm_pkr.value = bytes_to_hex(atu8_pkr);
     dm_verified.value = "Yes";
   }
   atu8_sk = k_secp.gen_sk();
