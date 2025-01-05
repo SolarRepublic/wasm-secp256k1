@@ -35,12 +35,27 @@
     fetch(link.href, fetchOpts);
   }
 })();
+const assign = Object.assign;
+const die = (s_msg, w_data) => {
+  throw assign(Error(s_msg), { data: w_data });
+};
 const SI_HASH_ALGORITHM_SHA256 = "SHA-256";
 const bytes = (...a_args) => new Uint8Array(...a_args);
 const sha256 = async (atu8_data) => bytes(await crypto.subtle.digest(SI_HASH_ALGORITHM_SHA256, atu8_data));
 const text_to_bytes = (s_text) => new TextEncoder().encode(s_text);
 const bytes_to_hex = (atu8_buffer) => atu8_buffer.reduce((s_out, xb_byte) => s_out + xb_byte.toString(16).padStart(2, "0"), "");
 const hex_to_bytes = (sx_hex) => bytes(sx_hex.length / 2).map((xb_ignore, i_char) => parseInt(sx_hex.slice(i_char * 2, i_char * 2 + 2), 16));
+const bytes_to_stream = (atu8) => new Response(atu8).body;
+const pipe_bytes_through = (atu8, d_pair) => bytes_to_stream(atu8).pipeThrough(d_pair);
+const stream_to_bytes = async (d_stream) => bytes(await new Response(d_stream).arrayBuffer());
+const transcompress_bytes_gzip = (atu8, d_stream) => stream_to_bytes(pipe_bytes_through(atu8, new d_stream("gzip")));
+typeof CompressionStream > "t" ? typeof Bun > "t" ? die("gzip (de)compression not available in current environment") : [
+  Bun.gzipSync,
+  Bun.gunzipSync
+] : [
+  (atu8) => transcompress_bytes_gzip(atu8, CompressionStream),
+  (atu8) => transcompress_bytes_gzip(atu8, DecompressionStream)
+];
 const emsimp = (f_map_imports, s_tag) => {
   s_tag += ": ";
   let AB_HEAP;
@@ -239,17 +254,20 @@ const WasmSecp256k1 = async (z_src) => {
     }
     return ATU8_HEAP.slice(ip_sk, ip_sk + ByteLens.PRIVATE_KEY);
   };
-  const tweak_pk = (f_tweak, s_tag) => (atu8_pk, atu8_tweak, b_uncompressed = false) => {
+  const apply_pk = (s_tag, atu8_pk, b_uncompressed, f_tweak, atu8_tweak) => {
     if (!parse_pubkey(atu8_pk)) {
-      throw Error(S_TAG_ECDSA_VERIFY + S_REASON_INVALID_PK);
+      throw Error(s_tag + S_REASON_INVALID_PK);
     }
     put_bytes(atu8_pk, ip_pk_scratch, ByteLens.PUBLIC_KEY_MAX);
-    put_bytes(atu8_tweak, ip_msg_hash, ByteLens.MSG_HASH);
-    if (BinaryResult.SUCCESS !== f_tweak(ip_ctx, ip_pk_lib, ip_msg_hash)) {
-      throw Error("p" + s_tag + S_REASON_INVALID_PK);
+    if (f_tweak) {
+      put_bytes(atu8_tweak, ip_msg_hash, ByteLens.MSG_HASH);
+      if (BinaryResult.SUCCESS !== f_tweak(ip_ctx, ip_pk_lib, ip_msg_hash)) {
+        throw Error("p" + s_tag + S_REASON_INVALID_PK);
+      }
     }
     return get_pk(b_uncompressed);
   };
+  const tweak_pk = (f_tweak, s_tag) => (atu8_pk, atu8_tweak, b_uncompressed = false) => apply_pk(s_tag, atu8_pk, b_uncompressed, f_tweak, atu8_tweak);
   return {
     gen_sk: () => valid_sk(crypto.getRandomValues(bytes(ByteLens.PRIVATE_KEY))),
     valid_sk,
@@ -315,7 +333,8 @@ const WasmSecp256k1 = async (z_src) => {
     tweak_sk_add: tweak_sk(g_wasm.ec_seckey_tweak_add, S_TAG_TWEAK_ADD),
     tweak_sk_mul: tweak_sk(g_wasm.ec_seckey_tweak_mul, S_TAG_TWEAK_MUL),
     tweak_pk_add: tweak_pk(g_wasm.ec_pubkey_tweak_add, S_TAG_TWEAK_ADD),
-    tweak_pk_mul: tweak_pk(g_wasm.ec_pubkey_tweak_mul, S_TAG_TWEAK_MUL)
+    tweak_pk_mul: tweak_pk(g_wasm.ec_pubkey_tweak_mul, S_TAG_TWEAK_MUL),
+    reformat_pk: (atu8_pk, b_uncompressed = false) => apply_pk("Reformat pk: ", atu8_pk, b_uncompressed)
   };
 };
 const elem = (si_id) => document.getElementById(si_id);

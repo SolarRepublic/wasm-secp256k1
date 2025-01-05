@@ -98,6 +98,7 @@ export interface Secp256k1 {
 	 * Tweak the given public key by adding to it
 	 * @param atu8_pk - the public key (33 or 65 bytes)
 	 * @param atu8_tweak - the tweak vector (32 bytes)
+	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
 	 * @returns the tweaked public key
 	 */
 	tweak_pk_add(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array;
@@ -106,9 +107,18 @@ export interface Secp256k1 {
 	 * Tweak the given public key by multiplying it
 	 * @param atu8_pk - the public key (33 or 65 bytes)
 	 * @param atu8_tweak - the tweak vector (32 bytes)
+	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
 	 * @returns the tweaked public key
 	 */
 	tweak_pk_mul(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array;
+
+	/**
+	 * Accepts a compressed 33-byte or uncompressed 65-byte public key and allows user to change its format
+	 * @param atu8_pk - the public key (33 or 65 bytes)
+	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
+	 * @returns the reformatted public key (unchanged if format is the same)
+	 */
+	reformat_pk(atu8_pk: Uint8Array, b_uncompressed?: boolean): Uint8Array;
 }
 
 /**
@@ -320,32 +330,57 @@ export const WasmSecp256k1 = async(
 	};
 
 	/**
-	 * Creates a function to tweak a public key using either addition or multiplication
-	 * @param f_tweak - the tweak function
-	 * @param s_tag - the tag to use for error messages
-	 * @returns a tweak function
+	 * Applies some transformation to a public key
+	 * @param s_tag - tag to use for error messages
+	 * @param atu8_pk - the public key bytes
+	 * @param b_uncompressed - whether the output should be uncompressed 65-byte
+	 * @param f_tweak - optional tweak function to apply
+	 * @param atu8_tweak - optional tweak value to use
+	 * @returns 
 	 */
-	const tweak_pk = (f_tweak: typeof g_wasm['ec_pubkey_tweak_add'], s_tag: string) => (atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed=false) => {
+	const apply_pk = (
+		s_tag: string,
+		atu8_pk: Uint8Array,
+		b_uncompressed: boolean,
+		f_tweak?: typeof g_wasm['ec_pubkey_tweak_add'],
+		atu8_tweak?: Uint8Array
+	) => {
 		// parse the public key
 		if(!parse_pubkey(atu8_pk)) {
-			throw Error(S_TAG_ECDSA_VERIFY+S_REASON_INVALID_PK);
+			throw Error(s_tag+S_REASON_INVALID_PK);
 		}
 
 		// copy input bytes into place
 		put_bytes(atu8_pk, ip_pk_scratch, ByteLens.PUBLIC_KEY_MAX);
 
-		// use message hash memory for tweak vector
-		put_bytes(atu8_tweak, ip_msg_hash, ByteLens.MSG_HASH);
+		// if tweak was specified
+		if(f_tweak) {
+			// use message hash memory for tweak vector
+			put_bytes(atu8_tweak!, ip_msg_hash, ByteLens.MSG_HASH);
 
-		// apply the given tweak to the public key
-		if(BinaryResult.SUCCESS !== f_tweak(ip_ctx, ip_pk_lib, ip_msg_hash)) {
-			throw Error('p'+s_tag+S_REASON_INVALID_PK);
+			// apply the given tweak to the public key
+			if(BinaryResult.SUCCESS !== f_tweak(ip_ctx, ip_pk_lib, ip_msg_hash)) {
+				throw Error('p'+s_tag+S_REASON_INVALID_PK);
+			}
 		}
 
 		// return tweaked public key
 		return get_pk(b_uncompressed);
 	};
 
+	/**
+	 * Creates a function to tweak a public key using either addition or multiplication (or not at all)
+	 * @param f_tweak - the tweak function
+	 * @param s_tag - the tag to use for error messages
+	 * @returns a tweak function
+	 */
+	const tweak_pk = (f_tweak: typeof g_wasm['ec_pubkey_tweak_add'], s_tag: string) => (
+		atu8_pk: Uint8Array,
+		atu8_tweak: Uint8Array,
+		b_uncompressed=false
+	) => apply_pk(s_tag, atu8_pk, b_uncompressed, f_tweak, atu8_tweak);
+
+	// enstruct
 	return {
 		gen_sk: () => valid_sk(crypto.getRandomValues(bytes(ByteLens.PRIVATE_KEY))),
 
@@ -461,6 +496,8 @@ export const WasmSecp256k1 = async(
 		tweak_pk_add: tweak_pk(g_wasm.ec_pubkey_tweak_add, S_TAG_TWEAK_ADD),
 
 		tweak_pk_mul: tweak_pk(g_wasm.ec_pubkey_tweak_mul, S_TAG_TWEAK_MUL),
+
+		reformat_pk: (atu8_pk: Uint8Array, b_uncompressed=false) => apply_pk('Reformat pk: ', atu8_pk, b_uncompressed),
 	};
 };
 
