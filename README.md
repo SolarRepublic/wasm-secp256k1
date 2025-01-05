@@ -9,10 +9,11 @@ Supports the following operations:
  - Recovering public key
  - ECDH
  - Tweaking secret/public key via addition/multiplication
+ - Changing between compressed 33-byte and uncompressed 65-byte public key formats
 
 This module offers *substantially* greater security than pure JavaScript implementations of Secp256k1 due to the fact that JS runtimes simply make it impossible for JS developers to effectively mitigate side-channel attacks. Anyone who says otherwise doesn't know what they're talking about.
 
-In addition to zero-ing out private keys after use, the wrapper also randomizes the lib context every time a public key is computed or a message is signed.
+In addition to zero-ing out private keys after use, the wrapper also randomizes the lib context before every time a secret key is used.
 
 ### [Demo webapp](https://starshell.net/wasm-secp256k1/) and its [source](https://github.com/SolarRepublic/wasm-secp256k1/blob/main/src/demo/webapp.ts)
 
@@ -189,6 +190,14 @@ interface Secp256k1 {
      * @returns the tweaked public key
      */
     tweak_pk_mul(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array;
+
+    /**
+     * Accepts a compressed 33-byte or uncompressed 65-byte public key and allows user to change its format
+     * @param atu8_pk - the public key (33 or 65 bytes)
+     * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
+     * @returns the reformatted public key (unchanged if format is the same)
+     */
+    reformat_pk(atu8_pk: Uint8Array, b_uncompressed?: boolean): Uint8Array;
 }
 ```
 
