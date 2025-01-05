@@ -19,30 +19,30 @@
     "clean": "rm -rf build",
     "build:wasm-bin": "docker build -f secp256k1.Dockerfile . -t wasm-secp256k1 --progress=plain && docker run --rm -v $(pwd)/public:/out wasm-secp256k1",
     "build:wasm-ts": "bun run ./src/generate.ts public/out/secp256k1.js > ./src/gen/wasm.ts",
-    "build:wasm": "bun run build:wasm-bin && bun run build:wasm-ts",
+    "build:wasm": "pnpm run build:wasm-bin && pnpm run build:wasm-ts",
     "build:demo": "vite build && rm docs/out/secp256k1.js",
-    "build:ts": "rollup -c rollup.config.ts --configPlugin typescript && bun run build:demo",
-    "build": "bun run build:wasm && bun run build:ts && cp public/out/secp256k1.wasm dist/",
-    "demo": "bun run build && vite dev"
+    "build:ts": "rollup -c rollup.config.ts --configPlugin typescript && pnpm run build:demo",
+    "build": "pnpm run build:wasm && pnpm run build:ts && cp public/out/secp256k1.wasm dist/",
+    "demo": "pnpm run build && vite dev"
   },
   "dependencies": {
-    "@blake.regalia/belt": "^0.40.1"
+    "@blake.regalia/belt": "^0.52.2"
   },
   "devDependencies": {
-    "@blake.regalia/eslint-config-elite": "^0.4.4",
+    "@blake.regalia/eslint-config-elite": "^0.5.11",
     "@blake.regalia/tsconfig": "^0.2.0",
-    "@rollup/plugin-typescript": "^11.1.6",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@rollup/plugin-wasm": "^6.2.2",
-    "@rollup/pluginutils": "^5.1.0",
-    "@types/node": "^22.7.9",
-    "@types/web": "^0.0.174",
-    "@typescript-eslint/parser": "^7.13.1",
-    "acorn": "^8.13.0",
-    "eslint": "^8.57.0",
-    "eslint-plugin-unused-imports": "^3.2.0",
-    "rollup": "^4.24.0",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.10"
+    "@rollup/pluginutils": "^5.1.4",
+    "@types/node": "^22.10.5",
+    "@types/web": "^0.0.188",
+    "@typescript-eslint/parser": "^8.19.0",
+    "acorn": "^8.14.0",
+    "eslint": "^9.17.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "rollup": "^4.29.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
   },
   "publishConfig": {
     "access": "public"
