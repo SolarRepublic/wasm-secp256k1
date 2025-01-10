@@ -1,13 +1,17 @@
-/* eslint-disable @typescript-eslint/no-loop-func */
-import type {Dict} from '@blake.regalia/belt';
-
 import {readFileSync} from 'fs';
-
-import {concat_entries, __UNDEFINED} from '@blake.regalia/belt';
-
 
 import * as acorn from 'acorn';
 
+
+type Dict<w_value=string> = Record<string, w_value>;
+const concat_entries = (a: any, f: any, b_keep_undefs= 0, a_out=[]) => {
+	return Object.entries(a).reduce((a_acc: any, [si_key, w_value], i_entry) => {
+		const w_add = f(si_key, w_value, i_entry);
+		if(undefined !== w_add || b_keep_undefs) a_acc.push(w_add);
+
+		return a_acc;
+	}, a_out)
+}
 const sr_file = process.argv[2];
 
 if(!sr_file) {
@@ -191,27 +195,26 @@ import type {
 } from '../types.js';
 
 export interface WasmImportsExtension extends WasmImports {
-	${concat_entries(h_types, (si_key, sx_value) => `${H_RENAME_IMPORTS[si_key] || si_key}: ${sx_value};`).join('\n\t')}
+	${concat_entries(h_types, (si_key: any, sx_value: any) => `${H_RENAME_IMPORTS[si_key] || si_key}: ${sx_value};`).join('\n\t')}
 }
 
 export interface WasmExportsExtension extends WasmExports {
-	${concat_entries(h_exports, si_func => si_func in H_KNOWN_EXPORT_TYPES? __UNDEFINED: `${rename_export(si_func)}: Function;`).join('\n\t')}
+	${concat_entries(h_exports, (si_func: any) => si_func in H_KNOWN_EXPORT_TYPES? undefined: `${rename_export(si_func)}: Function;`).join('\n\t')}
 }
 
 export const map_wasm_imports = (g_imports: WasmImportsExtension) => ({
 	${si_import_key}: {
-		${concat_entries(h_imports, (si_export, [si_symbol, sx_value]) => `${si_symbol}: ${sx_value},`).join('\n\t\t')}
+		${concat_entries(h_imports, (si_export: any, [si_symbol, sx_value]: [any, any]) => `${si_symbol}: ${sx_value},`).join('\n\t\t')}
 	},
 });
 
 export const map_wasm_exports = <
 	g_extension extends WasmExportsExtension=WasmExportsExtension,
 >(g_exports: WebAssembly.Exports): g_extension => ({
-	${concat_entries(h_exports, (si_func, sx_value) => sx_value+',').join('\n\t')}
+	${concat_entries(h_exports, (si_func: any, sx_value: any) => sx_value+',').join('\n\t')}
 
 	init: () => (g_exports['${si_init_key}'] as VoidFunction)(),
 } as g_extension);
 `);
 
 // export const init_wasm = (g_exports: WebAssembly.Exports) => (g_exports['${si_init_key}'] as VoidFunction)();
-

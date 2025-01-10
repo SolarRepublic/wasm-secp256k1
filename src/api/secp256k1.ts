@@ -1,24 +1,18 @@
-import type {PointerNonceFn, PointerPubkey, PointerSeed, PointerSig, PointerSigRecoverable, RecoveryValue, Secp256k1WasmCore, Secp256k1WasmEcdh, Secp256k1WasmEcdsaRaw, Secp256k1WasmEcdsaRecovery, SignatureAndRecovery} from './secp256k1-types.js';
+import type {PointerNonceFn, PointerPubkey, PointerSeed, PointerSig, PointerSigRecoverable, RecoveryValue, Secp256k1WasmCore, Secp256k1WasmEcdsaRaw, Secp256k1WasmEcdsaRecovery, SignatureAndRecovery} from './secp256k1-types.js';
 import type {ByteSize, Pointer} from '../types.js';
-import type {Promisable} from '@blake.regalia/belt';
-
-import {bytes} from '@blake.regalia/belt';
 
 import {emsimp} from './emsimp.js';
 import {BinaryResult, ByteLens, Flags} from './secp256k1-types.js';
-import {map_wasm_exports, map_wasm_imports} from '../gen/wasm.js';
+import {map_wasm_exports, map_wasm_imports} from '../gen/glue';
 
 
-const S_TAG_ECDH = 'ECDH: ';
 const S_TAG_ECDSA_VERIFY = 'ECDSA verify: ';
-const S_TAG_TWEAK_ADD = 'k tweak add: ';
-const S_TAG_TWEAK_MUL = 'k tweak mul: ';
 
 const S_REASON_INVALID_SK = 'Invalid private key';
 const S_REASON_INVALID_PK = 'Invalid public key';
 const S_REASON_UNPARSEABLE_SIG = 'Unparseable signature';
 
-const random_32 = () => crypto.getRandomValues(bytes(32));
+const random_32 = () => crypto.getRandomValues(new Uint8Array(32));
 
 /**
  * Wrapper instance providing operations backed by libsecp256k1 WASM module
@@ -71,48 +65,6 @@ export interface Secp256k1 {
 	recover(atu8_signature: Uint8Array, atu8_hash: Uint8Array, xc_recovery: number, b_uncompressed?: boolean): Uint8Array;
 
 	/**
-	 * ECDH key exchange. Computes a shared secret given a private key some public key
-	 * @param atu8_sk - the private key (32 bytes)
-	 * @param atu8_pk - the public key (33 or 65 bytes)
-	 * @returns the shared secret (32 bytes)
-	 */
-	ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array;
-
-	/**
-	 * Tweak the given private key by adding to it
-	 * @param atu8_sk - the private key (32 bytes)
-	 * @param atu8_tweak - the tweak vector (32 bytes)
-	 * @returns the tweaked private key
-	 */
-	tweak_sk_add(atu8_sk: Uint8Array, atu8_tweak: Uint8Array): Uint8Array;
-
-	/**
-	 * Tweak the given private key by multiplying it
-	 * @param atu8_sk - the private key (32 bytes)
-	 * @param atu8_tweak - the tweak vector (32 bytes)
-	 * @returns the tweaked private key
-	 */
-	tweak_sk_mul(atu8_sk: Uint8Array, atu8_tweak: Uint8Array): Uint8Array;
-
-	/**
-	 * Tweak the given public key by adding to it
-	 * @param atu8_pk - the public key (33 or 65 bytes)
-	 * @param atu8_tweak - the tweak vector (32 bytes)
-	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
-	 * @returns the tweaked public key
-	 */
-	tweak_pk_add(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array;
-
-	/**
-	 * Tweak the given public key by multiplying it
-	 * @param atu8_pk - the public key (33 or 65 bytes)
-	 * @param atu8_tweak - the tweak vector (32 bytes)
-	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
-	 * @returns the tweaked public key
-	 */
-	tweak_pk_mul(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array;
-
-	/**
 	 * Accepts a compressed 33-byte or uncompressed 65-byte public key and allows user to change its format
 	 * @param atu8_pk - the public key (33 or 65 bytes)
 	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
@@ -128,7 +80,7 @@ export interface Secp256k1 {
  * @returns the wrapper API
  */
 export const WasmSecp256k1 = async(
-	z_src: Promisable<Response> | BufferSource
+	z_src: Promise<Response> | BufferSource
 ): Promise<Secp256k1> => {
 	// prepare the runtime
 	const [g_imports, f_bind_heap] = emsimp(map_wasm_imports, 'wasm-secp256k1');
@@ -137,8 +89,8 @@ export const WasmSecp256k1 = async(
 	let d_wasm: WebAssembly.WebAssemblyInstantiatedSource;
 
 	// instantiate wasm binary by streaming the response bytes
-	if(z_src instanceof Response || z_src instanceof Promise) {
-		d_wasm = await WebAssembly.instantiateStreaming(z_src as Response, g_imports);
+	if(z_src instanceof Promise) {
+		d_wasm = await WebAssembly.instantiateStreaming(z_src, g_imports);
 	}
 	// instantiate using raw bianry
 	else {
@@ -148,7 +100,6 @@ export const WasmSecp256k1 = async(
 	// create the libsecp256k1 exports struct
 	const g_wasm = map_wasm_exports<
 		Secp256k1WasmCore
-		& Secp256k1WasmEcdh
 		& Secp256k1WasmEcdsaRaw
 		& Secp256k1WasmEcdsaRecovery
 	>(d_wasm.instance.exports);
@@ -165,7 +116,6 @@ export const WasmSecp256k1 = async(
 	const ip_sk = malloc(ByteLens.PRIVATE_KEY);
 	const ip_ent = malloc(ByteLens.NONCE_ENTROPY);
 	const ip_seed = malloc<PointerSeed>(ByteLens.RANDOM_SEED);
-	const ip_sk_shared = malloc(ByteLens.ECDH_SHARED_SK);
 	const ip_msg_hash = malloc(ByteLens.MSG_HASH);
 
 	// scratch spaces
@@ -201,7 +151,7 @@ export const WasmSecp256k1 = async(
 	 * @param nb_size - the size of the region
 	 */
 	const put_bytes = (atu8_data: Uint8Array, ip_write: Pointer, nb_size: ByteSize) => {
-		const atu8_buffer = bytes(nb_size);
+		const atu8_buffer = new Uint8Array(nb_size);
 		atu8_buffer.set(atu8_data);
 		ATU8_HEAP.set(atu8_buffer, ip_write);
 	};
@@ -302,48 +252,16 @@ export const WasmSecp256k1 = async(
 	};
 
 	/**
-	 * Creates a function to tweak a private key using either addition or multiplication
-	 * @param f_tweak - the tweak function
-	 * @param s_tag - the tag to use for error messages
-	 * @returns a tweak function
-	 */
-	const tweak_sk = (f_tweak: typeof g_wasm['ec_seckey_tweak_add'], s_tag: string) => (atu8_sk: Uint8Array, atu8_tweak: Uint8Array) => {
-		// randomize context
-		randomize_context();
-
-		// copy input bytes into place
-		put_bytes(atu8_sk, ip_sk, ByteLens.PRIVATE_KEY);
-
-		// use message hash memory for tweak vector
-		put_bytes(atu8_tweak, ip_msg_hash, ByteLens.MSG_HASH);
-
-		// apply the given tweak to the private key
-		if(BinaryResult.SUCCESS !== f_tweak(ip_ctx, ip_sk, ip_msg_hash)) {
-			// manually clear the private key
-			atu8_sk.fill(0);
-
-			throw Error('s'+s_tag+S_REASON_INVALID_SK);
-		}
-
-		// return tweaked private key
-		return ATU8_HEAP.slice(ip_sk, ip_sk+ByteLens.PRIVATE_KEY);
-	};
-
-	/**
 	 * Applies some transformation to a public key
 	 * @param s_tag - tag to use for error messages
 	 * @param atu8_pk - the public key bytes
 	 * @param b_uncompressed - whether the output should be uncompressed 65-byte
-	 * @param f_tweak - optional tweak function to apply
-	 * @param atu8_tweak - optional tweak value to use
-	 * @returns 
+	 * @returns
 	 */
 	const apply_pk = (
 		s_tag: string,
 		atu8_pk: Uint8Array,
-		b_uncompressed: boolean,
-		f_tweak?: typeof g_wasm['ec_pubkey_tweak_add'],
-		atu8_tweak?: Uint8Array
+		b_uncompressed: boolean
 	) => {
 		// parse the public key
 		if(!parse_pubkey(atu8_pk)) {
@@ -353,36 +271,13 @@ export const WasmSecp256k1 = async(
 		// copy input bytes into place
 		put_bytes(atu8_pk, ip_pk_scratch, ByteLens.PUBLIC_KEY_MAX);
 
-		// if tweak was specified
-		if(f_tweak) {
-			// use message hash memory for tweak vector
-			put_bytes(atu8_tweak!, ip_msg_hash, ByteLens.MSG_HASH);
-
-			// apply the given tweak to the public key
-			if(BinaryResult.SUCCESS !== f_tweak(ip_ctx, ip_pk_lib, ip_msg_hash)) {
-				throw Error('p'+s_tag+S_REASON_INVALID_PK);
-			}
-		}
-
 		// return tweaked public key
 		return get_pk(b_uncompressed);
 	};
 
-	/**
-	 * Creates a function to tweak a public key using either addition or multiplication (or not at all)
-	 * @param f_tweak - the tweak function
-	 * @param s_tag - the tag to use for error messages
-	 * @returns a tweak function
-	 */
-	const tweak_pk = (f_tweak: typeof g_wasm['ec_pubkey_tweak_add'], s_tag: string) => (
-		atu8_pk: Uint8Array,
-		atu8_tweak: Uint8Array,
-		b_uncompressed=false
-	) => apply_pk(s_tag, atu8_pk, b_uncompressed, f_tweak, atu8_tweak);
-
 	// enstruct
 	return {
-		gen_sk: () => valid_sk(crypto.getRandomValues(bytes(ByteLens.PRIVATE_KEY))),
+		gen_sk: () => valid_sk(crypto.getRandomValues(new Uint8Array(ByteLens.PRIVATE_KEY))),
 
 		valid_sk,
 
@@ -473,31 +368,6 @@ export const WasmSecp256k1 = async(
 			return get_pk(b_uncompressed);
 		},
 
-		ecdh(atu8_sk, atu8_pk) {
-			// parse public key
-			if(!parse_pubkey(atu8_pk)) throw Error(S_TAG_ECDH+S_REASON_INVALID_PK);
-
-			// start using private key
-			return with_sk(atu8_sk, () => {
-				// perform ecdh computation
-				if(BinaryResult.SUCCESS !== g_wasm.ecdh(ip_ctx, ip_sk_shared, ip_pk_lib, ip_sk)) {
-					throw Error(S_TAG_ECDH+S_REASON_INVALID_SK);
-				}
-
-				// return copy of result bytes
-				return ATU8_HEAP.slice(ip_sk_shared, ip_sk_shared+ByteLens.ECDH_SHARED_SK);
-			});
-		},
-
-		tweak_sk_add: tweak_sk(g_wasm.ec_seckey_tweak_add, S_TAG_TWEAK_ADD),
-
-		tweak_sk_mul: tweak_sk(g_wasm.ec_seckey_tweak_mul, S_TAG_TWEAK_MUL),
-
-		tweak_pk_add: tweak_pk(g_wasm.ec_pubkey_tweak_add, S_TAG_TWEAK_ADD),
-
-		tweak_pk_mul: tweak_pk(g_wasm.ec_pubkey_tweak_mul, S_TAG_TWEAK_MUL),
-
 		reformat_pk: (atu8_pk: Uint8Array, b_uncompressed=false) => apply_pk('Reformat pk: ', atu8_pk, b_uncompressed),
 	};
 };
-

@@ -1,4 +1,4 @@
-import type {WasmExportsExtension} from '../gen/wasm.js';
+import type {WasmExportsExtension} from '../gen/glue';
 import type {ByteSize, Pointer} from '../types.js';
 
 export type PointerContext = Pointer<'context'>;
@@ -23,7 +23,6 @@ export const enum ByteLens {
 	RANDOM_SEED = 32,  // when randomizing context
 
 	PRIVATE_KEY = 32,
-	ECDH_SHARED_SK = 32,
 
 	PUBLIC_KEY_COMPRESSED = 33,
 	PUBLIC_KEY_LIB = 64,  // secp256k1_pubkey: char [64];
@@ -181,116 +180,6 @@ export interface Secp256k1WasmCore extends WasmExportsExtension {
 		ip_pk_in: PointerPubkey,
 		xm_flags: Flags,
 	): BinaryResult.SUCCESS;
-
-
-	/** Tweak a secret key by adding tweak to it.
-	 *
-	 *  Returns: 0 if the arguments are invalid or the resulting secret key would be
-	 *           invalid (only when the tweak is the negation of the secret key). 1
-	 *           otherwise.
-	 *  Args:    ctx:   pointer to a context object.
-	 *  In/Out: seckey: pointer to a 32-byte secret key. If the secret key is
-	 *                  invalid according to secp256k1_ec_seckey_verify, this
-	 *                  function returns 0. seckey will be set to some unspecified
-	 *                  value if this function returns 0.
-	 *  In:    tweak32: pointer to a 32-byte tweak, which must be valid according to
-	 *                  secp256k1_ec_seckey_verify or 32 zero bytes. For uniformly
-	 *                  random 32-byte tweaks, the chance of being invalid is
-	 *                  negligible (around 1 in 2^128).
-	 */
-	ec_seckey_tweak_add(
-		this: void,
-		ip_ctx: PointerContext,
-		ip_sk_inout: Pointer<32>,
-		ip_tweak_in: Pointer<32>,
-	): BinaryResult.SUCCESS;
-
-
-	/** Tweak a secret key by multiplying it by a tweak.
-	 *
-	 *  Returns: 0 if the arguments are invalid. 1 otherwise.
-	 *  Args:   ctx:    pointer to a context object.
-	 *  In/Out: seckey: pointer to a 32-byte secret key. If the secret key is
-	 *                  invalid according to secp256k1_ec_seckey_verify, this
-	 *                  function returns 0. seckey will be set to some unspecified
-	 *                  value if this function returns 0.
-	 *  In:    tweak32: pointer to a 32-byte tweak. If the tweak is invalid according to
-	 *                  secp256k1_ec_seckey_verify, this function returns 0. For
-	 *                  uniformly random 32-byte arrays the chance of being invalid
-	 *                  is negligible (around 1 in 2^128).
-	 */
-	ec_seckey_tweak_mul(
-		this: void,
-		ip_ctx: PointerContext,
-		ip_sk_inout: Pointer<32>,
-		ip_tweak_in: Pointer<32>,
-	): BinaryResult.SUCCESS;
-
-
-	/** Tweak a public key by adding tweak times the generator to it.
-	 *
-	 *  Returns: 0 if the arguments are invalid or the resulting public key would be
-	 *           invalid (only when the tweak is the negation of the corresponding
-	 *           secret key). 1 otherwise.
-	 *  Args:    ctx:   pointer to a context object.
-	 *  In/Out: pubkey: pointer to a public key object. pubkey will be set to an
-	 *                  invalid value if this function returns 0.
-	 *  In:    tweak32: pointer to a 32-byte tweak, which must be valid according to
-	 *                  secp256k1_ec_seckey_verify or 32 zero bytes. For uniformly
-	 *                  random 32-byte tweaks, the chance of being invalid is
-	 *                  negligible (around 1 in 2^128).
-	 */
-	ec_pubkey_tweak_add(
-		this: void,
-		ip_ctx: PointerContext,
-		ip_pk_inout: PointerPubkey,
-		ip_tweak_in: Pointer<32>,
-	): BinaryResult.SUCCESS;
-
-
-	/** Tweak a public key by multiplying it by a tweak value.
-	 *
-	 *  Returns: 0 if the arguments are invalid. 1 otherwise.
-	 *  Args:    ctx:   pointer to a context object.
-	 *  In/Out: pubkey: pointer to a public key object. pubkey will be set to an
-	 *                  invalid value if this function returns 0.
-	 *  In:    tweak32: pointer to a 32-byte tweak. If the tweak is invalid according to
-	 *                  secp256k1_ec_seckey_verify, this function returns 0. For
-	 *                  uniformly random 32-byte arrays the chance of being invalid
-	 *                  is negligible (around 1 in 2^128).
-	 */
-	ec_pubkey_tweak_mul(
-		this: void,
-		ip_ctx: PointerContext,
-		ip_pk_inout: PointerPubkey,
-		ip_tweak_in: Pointer<32>,
-	): BinaryResult.SUCCESS;
-}
-
-
-export interface Secp256k1WasmEcdh {
-	/** Compute an EC Diffie-Hellman secret in constant time
-	 *
-	 *  Returns: 1: exponentiation was successful
-	 *           0: scalar was invalid (zero or overflow) or hashfp returned 0
-	 *  Args:    ctx:        pointer to a context object.
-	 *  Out:     output:     pointer to an array to be filled by hashfp.
-	 *  In:      pubkey:     a pointer to a secp256k1_pubkey containing an initialized public key.
-	 *           seckey:     a 32-byte scalar with which to multiply the point.
-	 *           hashfp:     pointer to a hash function. If NULL,
-	 *                       secp256k1_ecdh_hash_function_sha256 is used
-	 *                       (in which case, 32 bytes will be written to output).
-	 *           data:       arbitrary data pointer that is passed through to hashfp
-	 *                       (can be NULL for secp256k1_ecdh_hash_function_sha256).
-	 */
-	ecdh(
-		ip_ctx: PointerContext,
-		ip_shared_out: Pointer<32>,
-		ip_pk_in: PointerPubkey,
-		ip_sk_in: Pointer<32>,
-		ip_noncefn_in?: PointerNonceFn,
-		ip_ent_in?: Pointer<32>,
-	): BinaryResult;
 }
 
 
