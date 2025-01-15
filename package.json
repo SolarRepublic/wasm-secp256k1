@@ -1,6 +1,6 @@
 {
-  "name": "@labscommunity/wasm-secp256k1",
-  "version": "0.0.1",
+  "name": "@arweaveteam/wasm-secp256k1",
+  "version": "0.0.3",
   "description": "Minimal wrapper around libsecp256k1 library (https://github.com/bitcoin-core/secp256k1).",
   "license": "MIT",
   "main": "dist/main.cjs",
@@ -28,7 +28,12 @@
     "typescript": "^5.7.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ArweaveTeam/wasm-secp256k1.git"
   },
   "scripts": {
     "build": "bunx rollup -c rollup.config.ts --configPlugin typescript"

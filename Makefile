@@ -11,6 +11,7 @@ USAGE:
 
 	build-container: build the WASM builder container image.
 	build: build the project.
+	publish: publish to https://npm.pkg.github.com.
 ]
 endef
 
@@ -75,3 +76,6 @@ build-container:
 build: $(OUTPUT_DIR) $(LIBSECP256K1.JS) $(LIBSECP256K1.WASM) $(LIBSECP256K1.GLUE) $(OUTPUT_DIR)/secp256k1.js $(OUTPUT_DIR)/secp256k1.wasm
 	@bun install --frozen-lockfile
 	@bun run build
+
+publish:
+	@npm publish
