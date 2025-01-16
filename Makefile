@@ -7,9 +7,9 @@ REQUIREMENTS:
 USAGE:
 > make [
 	sense: see usage.
-	clean: clean output dir.
+	clean: clean build artifacts, environment, cache, etc..
 
-	build-container: build the WASM builder container image.
+	build-container: build the docker image for WASM builder container.
 	build: build the project.
 	publish: publish to https://npm.pkg.github.com.
 ]
