@@ -1,24 +1,46 @@
 {
-	"extends": "@blake.regalia/tsconfig/tsconfig.node.json",
-
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"extends": "@tsconfig/node22/tsconfig.json",
 	"compilerOptions": {
 		"baseUrl": ".",
-	
 		"noEmit": true,
-		"declaration": false,
-
+		"declaration": true,
+		"declarationDir": "dist",
 		"outDir": "dist",
-
 		"noImplicitReturns": false,
-
 		"allowJs": false,
-
-		"module": "ESNext"
+		"declarationMap": true,
+		"sourceMap": true,
+		"inlineSources": true,
+		"newLine": "lf",
+		"allowArbitraryExtensions": true,
+		"resolveJsonModule": true,
+		"allowSyntheticDefaultImports": true,
+		"forceConsistentCasingInFileNames": true,
+		"verbatimModuleSyntax": false,
+		"alwaysStrict": true,
+		"moduleResolution": "node",
+		"module": "ESNext",
+		"target": "es2022",
+		"lib": [
+			"ES2022"
+		],
+		"skipLibCheck": false,
+		"preserveConstEnums": false,
+		"exactOptionalPropertyTypes": true,
+		"noImplicitOverride": true,
+		"noImplicitThis": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"strict": true,
+		"noUncheckedIndexedAccess": false,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"noErrorTruncation": true,
+		"incremental": true,
+		"tsBuildInfoFile": "./.rollup.cache/tsconfig.tsbuildinfo"
 	},
-
 	"include": [
-		"src/**/*.ts",
-		"*.ts",
+		"src/**/*.ts"
 	],
 
 	"ts-node": {

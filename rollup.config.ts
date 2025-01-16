@@ -2,7 +2,6 @@ import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {gzipSync} from 'node:zlib';
 
-import {bytes_to_base64} from '@blake.regalia/belt';
 import typescript from '@rollup/plugin-typescript';
 import {defineConfig} from 'rollup';
 
@@ -12,19 +11,23 @@ const R_WASM = /\.wasm(\?gzip)?$/;
 
 export default defineConfig({
 	input: [
-		'src/main.ts',
-		'src/gzipped.ts',
-		'src/headless.ts',
+		'src/main.ts'
 	],
-	output: {
+	output: [{
 		dir: 'dist',
-		format: 'module',
-		chunkFileNames: '[name].js',
+		entryFileNames: '[name].esm.js',
+		format: 'esm'
 	},
+	{
+		dir: 'dist',
+		format: 'cjs',
+		entryFileNames: '[name].cjs'
+	}],
 	plugins: [
 		typescript({
 			sourceMap: true,
-			tsconfig: 'tsconfig.rollup.json',
+			tsconfig: 'tsconfig.json',
+			noEmitOnError: false
 		}),
 
 		// simple plugin to load wasm binary
@@ -53,7 +56,7 @@ export default defineConfig({
 				if(p_file.endsWith('?gzip')) {
 					p_file = p_file.replace(/\?gzip$/, '');
 
-					sb64_contents = bytes_to_base64(gzipSync(readFileSync(p_file)));
+					sb64_contents = Buffer.from(gzipSync(readFileSync(p_file))).toString('base64url');
 				}
 				// raw
 				else {
