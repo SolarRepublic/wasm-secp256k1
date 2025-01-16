@@ -12,7 +12,7 @@ const S_REASON_INVALID_SK = 'Invalid private key';
 const S_REASON_INVALID_PK = 'Invalid public key';
 const S_REASON_UNPARSEABLE_SIG = 'Unparseable signature';
 
-const random_32 = () => crypto.getRandomValues(new Uint8Array(32));
+const random = (size: number) => crypto.getRandomValues(new Uint8Array(size));
 
 /**
  * Wrapper instance providing operations backed by libsecp256k1 WASM module
@@ -43,10 +43,9 @@ export interface Secp256k1 {
 	 * Signs the given message hash using the given private key.
 	 * @param atu8_sk - the private key
 	 * @param atu8_hash - the message hash (32 bytes)
-	 * @param atu8_entropy - optional entropy to use
 	 * @returns tuple of [compact signature (64 bytes) as concatenation of `r || s`, recovery ID byte]
 	 */
-	sign(atu8_sk: Uint8Array, atu8_hash: Uint8Array, atu8_ent?: Uint8Array): SignatureAndRecovery;
+	sign(atu8_sk: Uint8Array, atu8_hash: Uint8Array): SignatureAndRecovery;
 
 	/**
 	 * Verifies the signature is valid for the given message hash and public key
@@ -161,7 +160,7 @@ export const WasmSecp256k1 = async(
 	 */
 	const randomize_context = () => {
 		// put random seed bytes into place
-		put_bytes(random_32(), ip_seed, ByteLens.RANDOM_SEED);
+		put_bytes(random(32), ip_seed, ByteLens.RANDOM_SEED);
 
 		// randomize context
 		if(BinaryResult.SUCCESS !== g_wasm.context_randomize(ip_ctx, ip_seed)) {
@@ -277,7 +276,7 @@ export const WasmSecp256k1 = async(
 
 	// enstruct
 	return {
-		gen_sk: () => valid_sk(crypto.getRandomValues(new Uint8Array(ByteLens.PRIVATE_KEY))),
+		gen_sk: () => valid_sk(random(ByteLens.PRIVATE_KEY)),
 
 		valid_sk,
 
@@ -294,15 +293,12 @@ export const WasmSecp256k1 = async(
 			return get_pk(b_uncompressed);
 		},
 
-		sign(atu8_sk, atu8_hash, atu8_ent=random_32()) {
+		sign(atu8_sk, atu8_hash) {
 			// randomize context
 			randomize_context();
 
 			// copy message hash bytes into place
 			put_bytes(atu8_hash, ip_msg_hash, ByteLens.MSG_HASH);
-
-			// copy entropy bytes into place
-			put_bytes(atu8_ent, ip_ent, ByteLens.NONCE_ENTROPY);
 
 			// while using the private key, sign the given message hash
 			if(BinaryResult.SUCCESS !== with_sk(atu8_sk, () => g_wasm.ecdsa_sign_recoverable(
@@ -311,7 +307,7 @@ export const WasmSecp256k1 = async(
 				ip_msg_hash,
 				ip_sk,
 				0 as PointerNonceFn,
-				ip_ent
+				0 as Pointer<32>
 			))) {
 				throw Error('ECDSA sign: '+S_REASON_INVALID_SK);
 			}
