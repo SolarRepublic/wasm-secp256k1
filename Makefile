@@ -35,11 +35,26 @@ all: sense
 sense:
 	$(info $(USAGE))
 
+# Define directories to remove
+DIRS_TO_REMOVE = $(OUTPUT_DIR) $(NODE_MODULES) $(DOCKER_DIST) $(ROLLUP_CACHE)
+# Define Unix-like command to remove directories
+UNIX_RM = for dir in $(DIRS_TO_REMOVE); do [ -d "$$dir" ] && rm -rf $$dir; done
+# Define Windows command to remove directories
+WINDOWS_RM = for %%d in ($(DIRS_TO_REMOVE)) do if exist "%%~d" rmdir /s /q "%%~d"
+# For Unix-like systems, use the UNIX_RM command
+ifdef OS
+  SHELL = /bin/bash
+  CLEAN_CMD = $(UNIX_RM)
+else
+  ifeq ($(OS),Windows_NT)
+    # For Windows, use cmd and the WINDOWS_RM command
+    SHELL = cmd
+    CLEAN_CMD = $(WINDOWS_RM)
+  endif
+endif
+
 clean:
-	@pwsh -Command 'if(Test-Path $(OUTPUT_DIR)){Remove-Item -Force -Recurse $(OUTPUT_DIR)}'
-	@pwsh -Command 'if(Test-Path $(NODE_MODULES)){Remove-Item -Force -Recurse $(NODE_MODULES)}'
-	@pwsh -Command 'if(Test-Path $(DOCKER_DIST)){Remove-Item -Force -Recurse $(DOCKER_DIST)}'
-	@pwsh -Command 'if(Test-Path $(ROLLUP_CACHE)){Remove-Item -Force -Recurse $(ROLLUP_CACHE)}'
+	@$(CLEAN_CMD)
 
 ################
 # Host Targets #
