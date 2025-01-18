@@ -1,4 +1,5 @@
-export type {SignatureAndRecovery, RecoveryValue} from './api/secp256k1-types';
+export type {SignatureAndRecovery, RecoveryValue } from './api/secp256k1-types';
+export { ByteLens } from './api/secp256k1-types';
 export type { Secp256k1 } from './api/secp256k1';
 
 import { Secp256k1, WasmSecp256k1 } from './api/secp256k1';
