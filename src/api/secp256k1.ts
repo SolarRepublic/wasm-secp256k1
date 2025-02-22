@@ -16,7 +16,9 @@ const S_REASON_INVALID_SK = 'Invalid private key';
 const S_REASON_INVALID_PK = 'Invalid public key';
 const S_REASON_UNPARSEABLE_SIG = 'Unparseable signature';
 
-const random_32 = () => crypto.getRandomValues(new Uint8Array(32));
+const bytes = (nb_bytes: number) => new Uint8Array(nb_bytes);
+
+const random_32 = () => crypto.getRandomValues(bytes(32));
 
 /**
  * Wrapper instance providing operations backed by libsecp256k1 WASM module
