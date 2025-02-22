@@ -2,8 +2,6 @@ import type {PointerNonceFn, PointerPubkey, PointerSeed, PointerSig, PointerSigR
 import type {ByteSize, Pointer} from '../types.js';
 import type {Promisable} from '@blake.regalia/belt';
 
-import {bytes} from '@blake.regalia/belt';
-
 import {emsimp} from './emsimp.js';
 import {BinaryResult, ByteLens, Flags} from './secp256k1-types.js';
 import {map_wasm_exports, map_wasm_imports} from '../gen/wasm.js';
@@ -18,7 +16,7 @@ const S_REASON_INVALID_SK = 'Invalid private key';
 const S_REASON_INVALID_PK = 'Invalid public key';
 const S_REASON_UNPARSEABLE_SIG = 'Unparseable signature';
 
-const random_32 = () => crypto.getRandomValues(bytes(32));
+const random_32 = () => crypto.getRandomValues(new Uint8Array(32));
 
 /**
  * Wrapper instance providing operations backed by libsecp256k1 WASM module

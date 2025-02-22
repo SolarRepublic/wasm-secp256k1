@@ -40,16 +40,16 @@ const die = (s_msg, w_data) => {
   throw assign(Error(s_msg), { data: w_data });
 };
 const SI_HASH_ALGORITHM_SHA256 = "SHA-256";
-const bytes = (...a_args) => new Uint8Array(...a_args);
-const sha256 = async (atu8_data) => bytes(await crypto.subtle.digest(SI_HASH_ALGORITHM_SHA256, atu8_data));
+const bytes$1 = (...a_args) => new Uint8Array(...a_args);
+const sha256 = async (atu8_data) => bytes$1(await crypto.subtle.digest(SI_HASH_ALGORITHM_SHA256, atu8_data));
 const text_to_bytes = (s_text) => new TextEncoder().encode(s_text);
 const bytes_to_hex = (atu8_buffer) => atu8_buffer.reduce((s_out, xb_byte) => s_out + xb_byte.toString(16).padStart(2, "0"), "");
-const hex_to_bytes = (sx_hex) => bytes(sx_hex.length / 2).map((xb_ignore, i_char) => parseInt(sx_hex.slice(i_char * 2, i_char * 2 + 2), 16));
+const hex_to_bytes = (sx_hex) => bytes$1(sx_hex.length / 2).map((xb_ignore, i_char) => parseInt(sx_hex.slice(i_char * 2, i_char * 2 + 2), 16));
 const bytes_to_stream = (atu8) => new Response(atu8).body;
 const pipe_bytes_through = (atu8, d_pair) => bytes_to_stream(atu8).pipeThrough(d_pair);
-const stream_to_bytes = async (d_stream) => bytes(await new Response(d_stream).arrayBuffer());
+const stream_to_bytes = async (d_stream) => bytes$1(await new Response(d_stream).arrayBuffer());
 const transcompress_bytes_gzip = (atu8, d_stream) => stream_to_bytes(pipe_bytes_through(atu8, new d_stream("gzip")));
-typeof CompressionStream > "t" ? typeof Bun > "t" ? die("gzip (de)compression not available in current environment") : [
+const [gzip_bytes, gunzip_bytes] = typeof CompressionStream > "t" ? typeof Bun > "t" ? die("gzip (de)compression not available in current environment") : [
   Bun.gzipSync,
   Bun.gunzipSync
 ] : [
@@ -179,7 +179,7 @@ const S_TAG_TWEAK_MUL = "k tweak mul: ";
 const S_REASON_INVALID_SK = "Invalid private key";
 const S_REASON_INVALID_PK = "Invalid public key";
 const S_REASON_UNPARSEABLE_SIG = "Unparseable signature";
-const random_32 = () => crypto.getRandomValues(bytes(32));
+const random_32 = () => crypto.getRandomValues(new Uint8Array(32));
 const WasmSecp256k1 = async (z_src) => {
   const [g_imports, f_bind_heap] = emsimp(map_wasm_imports, "wasm-secp256k1");
   let d_wasm;

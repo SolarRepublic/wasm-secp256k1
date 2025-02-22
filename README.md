@@ -1,6 +1,6 @@
 # wasm-secp256k1
 
-The [libsecp256k1 C library](https://github.com/bitcoin-core/secp256k1) compiled to WASM and wrapped with an ultralight TypeScript API.
+The [libsecp256k1 C library](https://github.com/bitcoin-core/secp256k1) compiled to WASM and wrapped with an ultralight TypeScript API. The generated js module has zero dependencies.
 
 Supports the following operations:
  - Computing the corresponding public key for a given secret key
