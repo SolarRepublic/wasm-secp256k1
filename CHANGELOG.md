@@ -5,7 +5,7 @@
 - removed only runtime dependency to make js module zero-dependency and improve auditability.
 
 
-## v0.5.0 (2022)
+## v0.5.0 (2025-01-04)
 
 ### New features:
 
