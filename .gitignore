@@ -7,6 +7,7 @@
 /lib
 /proto
 /public/out
+.rollup.cache
 
 # private
 **/*.env

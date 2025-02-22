@@ -179,7 +179,8 @@ const S_TAG_TWEAK_MUL = "k tweak mul: ";
 const S_REASON_INVALID_SK = "Invalid private key";
 const S_REASON_INVALID_PK = "Invalid public key";
 const S_REASON_UNPARSEABLE_SIG = "Unparseable signature";
-const random_32 = () => crypto.getRandomValues(new Uint8Array(32));
+const bytes = (nb_bytes) => new Uint8Array(nb_bytes);
+const random_32 = () => crypto.getRandomValues(bytes(32));
 const WasmSecp256k1 = async (z_src) => {
   const [g_imports, f_bind_heap] = emsimp(map_wasm_imports, "wasm-secp256k1");
   let d_wasm;
