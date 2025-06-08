@@ -1,4 +1,4 @@
-FROM emscripten/emsdk:3.1.69
+FROM emscripten/emsdk:4.0.9
 
 RUN apt-get update \
   && apt-get install -y \

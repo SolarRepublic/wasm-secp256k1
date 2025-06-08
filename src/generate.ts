@@ -1,10 +1,6 @@
 /* eslint-disable @typescript-eslint/no-loop-func */
-import type {Dict} from '@blake.regalia/belt';
-
 import {readFileSync} from 'fs';
-
-import {concat_entries, __UNDEFINED} from '@blake.regalia/belt';
-
+import {concat_entries} from '@blake.regalia/belt';
 
 import * as acorn from 'acorn';
 
@@ -29,6 +25,8 @@ let si_import_key = '';
 let si_init_key = '';
 let xc_fd_close = 0;
 let xc_fd_seek = 0;
+
+type Dict<w_value=string> = Record<string, w_value>;
 
 const h_types: Dict<string> = {};
 const h_imports: Dict<[string, string]> = {};
@@ -195,7 +193,7 @@ export interface WasmImportsExtension extends WasmImports {
 }
 
 export interface WasmExportsExtension extends WasmExports {
-	${concat_entries(h_exports, si_func => si_func in H_KNOWN_EXPORT_TYPES? __UNDEFINED: `${rename_export(si_func)}: Function;`).join('\n\t')}
+	${concat_entries(h_exports, si_func => si_func in H_KNOWN_EXPORT_TYPES? void 0: `${rename_export(si_func)}: Function;`).join('\n\t')}
 }
 
 export const map_wasm_imports = (g_imports: WasmImportsExtension) => ({
