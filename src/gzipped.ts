@@ -1,8 +1,7 @@
 export * from './headless.js';
 
-import {base64_to_bytes, concat} from '@blake.regalia/belt';
-
 import {WasmSecp256k1, type Secp256k1} from './api/secp256k1.js';
+import {base64_to_bytes, concat} from './utli.js';
 
 import SB64_SECP256K1_WASM from '../public/out/secp256k1.wasm?gzip';
 
