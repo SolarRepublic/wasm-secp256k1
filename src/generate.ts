@@ -61,22 +61,52 @@ const export_type = (si_func: string) => H_KNOWN_EXPORT_TYPES[si_func] || 'Funct
 
 for(const yn_top of yn_root.body) {
 	if('ExpressionStatement' === yn_top.type) {
-		for(const yn_arg of (yn_top.expression as acorn.CallExpression).arguments) {
-			if('ArrowFunctionExpression' === yn_arg.type) {
-				const a_stmts = (yn_arg.body as acorn.BlockStatement).body;
+		const yn_expr = yn_top.expression;
 
-				for(const yn_stmt of a_stmts) {
-					if('ExpressionStatement' === yn_stmt.type) {
-						const yn_expr = yn_stmt.expression;
+		if('CallExpression' === yn_expr.type) {
+			const yn_callee = yn_expr.callee;
 
-						if('AssignmentExpression' === yn_expr.type) {
-							const si_func = ident(yn_expr.left);
+			// `thing.prop`
+			if('MemberExpression' === yn_callee.type) {
+				const yn_obj = yn_callee.object;
 
-							const yn_right = yn_expr.right;
-							if('MemberExpression' === yn_right.type) {
-								const si_symbol = litval<string>(yn_right.property);
+				// `thing.method()`
+				if('CallExpression' === yn_obj.type) {
+					const yn_obj_callee = yn_obj.callee;
 
-								h_exports[si_func] = `${rename_export(si_func)}: g_exports['${si_symbol}']`; // as ${export_type(si_func)}`;
+					if('MemberExpression' === yn_obj_callee.type) {
+						const yn_ident = yn_obj_callee.object;
+
+						if('Identifier' === yn_ident.type) {
+							// `WebAssembly.<method>(...)`
+							if('WebAssembly' === yn_ident.name) {
+								// each arg in top call expression
+								for(const yn_arg of yn_expr.arguments) {
+									// `.then` callback
+									if('ArrowFunctionExpression' === yn_arg.type) {
+										const a_stmts = (yn_arg.body as acorn.BlockStatement).body;
+
+										for(const yn_stmt of a_stmts) {
+											if('ExpressionStatement' === yn_stmt.type) {
+												const yn_expr = yn_stmt.expression;
+
+												// `variable = value`
+												if('AssignmentExpression' === yn_expr.type) {
+													const si_func = ident(yn_expr.left);
+
+													// `value.property`
+													const yn_right = yn_expr.right;
+													if('MemberExpression' === yn_right.type) {
+														const si_symbol = litval<string>(yn_right.property);
+
+														h_exports[si_func] = `${rename_export(si_func)}: g_exports['${si_symbol}']`; // as ${export_type(si_func)}`;
+													}
+												}
+											}
+										}
+									}
+								}
+
 							}
 						}
 					}
@@ -148,6 +178,25 @@ for(const yn_top of yn_root.body) {
 								if('wasmExports' === ident(yn_callee.object)) {
 									si_init_key = litval<string>(yn_callee.property);
 								}
+							}
+						}
+					}
+				}
+			},
+
+			assignWasmExports() {
+				for(const yn_stmt of a_body) {
+					if('ExpressionStatement' === yn_stmt.type) {
+						const yn_expr = yn_stmt.expression;
+
+						if('AssignmentExpression' === yn_expr.type) {
+							const si_func = ident(yn_expr.left);
+
+							const yn_right = yn_expr.right;
+							if('MemberExpression' === yn_right.type) {
+								const si_symbol = litval<string>(yn_right.property);
+
+								h_exports[si_func] = `${rename_export(si_func)}: g_exports['${si_symbol}']`; // as ${export_type(si_func)}`;
 							}
 						}
 					}

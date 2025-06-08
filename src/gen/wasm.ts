@@ -24,7 +24,23 @@ export interface WasmImportsExtension extends WasmImports {
 }
 
 export interface WasmExportsExtension extends WasmExports {
-	
+	context_create: Function;
+	ec_pubkey_parse: Function;
+	ec_pubkey_serialize: Function;
+	ecdsa_signature_parse_compact: Function;
+	ecdsa_verify: Function;
+	ec_seckey_verify: Function;
+	ec_pubkey_create: Function;
+	ec_seckey_tweak_add: Function;
+	ec_pubkey_tweak_add: Function;
+	ec_seckey_tweak_mul: Function;
+	ec_pubkey_tweak_mul: Function;
+	context_randomize: Function;
+	ecdh: Function;
+	ecdsa_recoverable_signature_parse_compact: Function;
+	ecdsa_recoverable_signature_serialize_compact: Function;
+	ecdsa_sign_recoverable: Function;
+	ecdsa_recover: Function;
 }
 
 export const map_wasm_imports = (g_imports: WasmImportsExtension) => ({
@@ -40,6 +56,25 @@ export const map_wasm_imports = (g_imports: WasmImportsExtension) => ({
 export const map_wasm_exports = <
 	g_extension extends WasmExportsExtension=WasmExportsExtension,
 >(g_exports: WebAssembly.Exports): g_extension => ({
+	malloc: g_exports['h'],
+	free: g_exports['i'],
+	context_create: g_exports['j'],
+	ec_pubkey_parse: g_exports['k'],
+	ec_pubkey_serialize: g_exports['l'],
+	ecdsa_signature_parse_compact: g_exports['m'],
+	ecdsa_verify: g_exports['n'],
+	ec_seckey_verify: g_exports['o'],
+	ec_pubkey_create: g_exports['p'],
+	ec_seckey_tweak_add: g_exports['q'],
+	ec_pubkey_tweak_add: g_exports['r'],
+	ec_seckey_tweak_mul: g_exports['s'],
+	ec_pubkey_tweak_mul: g_exports['t'],
+	context_randomize: g_exports['u'],
+	ecdh: g_exports['v'],
+	ecdsa_recoverable_signature_parse_compact: g_exports['w'],
+	ecdsa_recoverable_signature_serialize_compact: g_exports['x'],
+	ecdsa_sign_recoverable: g_exports['y'],
+	ecdsa_recover: g_exports['z'],
 	memory: g_exports['f'],
 
 	init: () => (g_exports['g'] as VoidFunction)(),
