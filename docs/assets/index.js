@@ -139,38 +139,18 @@ var BinaryResult = /* @__PURE__ */ ((BinaryResult2) => {
 })(BinaryResult || {});
 const map_wasm_imports = (g_imports) => ({
   a: {
-    f: g_imports.abort,
-    e: g_imports.memcpy,
-    c: g_imports.resize,
+    e: g_imports.abort,
+    b: g_imports.resize,
     d: () => 52,
     // _fd_close,
-    b: () => 70,
+    c: () => 70,
     // _fd_seek,
     a: g_imports.write
   }
 });
 const map_wasm_exports = (g_exports) => ({
-  malloc: g_exports["i"],
-  free: g_exports["j"],
-  context_create: g_exports["l"],
-  ec_pubkey_parse: g_exports["m"],
-  ec_pubkey_serialize: g_exports["n"],
-  ecdsa_signature_parse_compact: g_exports["o"],
-  ecdsa_verify: g_exports["p"],
-  ec_seckey_verify: g_exports["q"],
-  ec_pubkey_create: g_exports["r"],
-  ec_seckey_tweak_add: g_exports["s"],
-  ec_pubkey_tweak_add: g_exports["t"],
-  ec_seckey_tweak_mul: g_exports["u"],
-  ec_pubkey_tweak_mul: g_exports["v"],
-  context_randomize: g_exports["w"],
-  ecdh: g_exports["x"],
-  ecdsa_recoverable_signature_parse_compact: g_exports["y"],
-  ecdsa_recoverable_signature_serialize_compact: g_exports["z"],
-  ecdsa_sign_recoverable: g_exports["A"],
-  ecdsa_recover: g_exports["B"],
-  memory: g_exports["g"],
-  init: () => g_exports["h"]()
+  memory: g_exports["f"],
+  init: () => g_exports["g"]()
 });
 const S_TAG_ECDH = "ECDH: ";
 const S_TAG_ECDSA_VERIFY = "ECDSA verify: ";

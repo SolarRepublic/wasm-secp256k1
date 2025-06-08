@@ -7,7 +7,7 @@ RUN apt-get update \
   build-essential
 
 COPY submodules/libsecp256k1 /app
-COPY scripts/compile.sh /app
+COPY scripts/compile.sh /app/compile.sh
 
 WORKDIR /app
 
