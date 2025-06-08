@@ -25,9 +25,10 @@
     "build": "pnpm run build:wasm && pnpm run build:ts && cp public/out/secp256k1.wasm dist/",
     "demo": "pnpm run build && vite dev"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@blake.regalia/belt": "^0.57.1"
+  },
   "devDependencies": {
-    "@blake.regalia/belt": "^0.57.1",
     "@blake.regalia/eslint-config-elite": "^0.5.22",
     "@blake.regalia/tsconfig": "^0.3.7",
     "@rollup/plugin-typescript": "^12.1.2",
