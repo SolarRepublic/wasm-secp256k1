@@ -27,24 +27,24 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@blake.regalia/belt": "^0.57.2",
+    "@blake.regalia/belt": "^0.57.8",
     "@blake.regalia/eslint-config-elite": "^0.5.22",
     "@blake.regalia/tsconfig": "^0.3.7",
-    "@rollup/plugin-typescript": "^12.1.2",
+    "@rollup/plugin-typescript": "^12.1.4",
     "@rollup/plugin-wasm": "^6.2.2",
-    "@rollup/pluginutils": "^5.1.4",
-    "@types/node": "^22.15.30",
-    "@types/web": "^0.0.239",
-    "@typescript-eslint/parser": "^8.33.1",
+    "@rollup/pluginutils": "^5.2.0",
+    "@types/node": "^24.2.0",
+    "@types/web": "^0.0.259",
+    "@typescript-eslint/parser": "^8.39.0",
     "acorn": "^8.15.0",
-    "eslint": "^9.28.0",
+    "eslint": "^9.32.0",
     "eslint-plugin-unused-imports": "^4.1.4",
-    "rollup": "^4.42.0",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.5"
+    "rollup": "^4.46.2",
+    "typescript": "^5.9.2",
+    "vite": "^7.0.6"
   },
   "publishConfig": {
     "access": "public"
   },
-  "packageManager": "pnpm@10.12.1"
+  "packageManager": "pnpm@10.14.0"
 }
