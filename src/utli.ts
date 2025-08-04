@@ -7,7 +7,7 @@ const SX_CHARS_BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
  * @param sb64_data input base64-encoded string
  * @returns output buffer
  */
-export const base64_to_bytes = (sb64_data: string): Uint8Array => {
+export const base64_to_bytes = (sb64_data: string): Uint8Array<ArrayBuffer> => {
 	// remove padding from string and normalize from URL-safe variant
 	sb64_data = sb64_data.replace(/=+$/, '').replace(/[-_]/g, s => '-' === s? '+': '_' === s? '/': s);
 
@@ -49,7 +49,7 @@ export const base64_to_bytes = (sb64_data: string): Uint8Array => {
  * @param a_buffers the data to concatenate in order
  * @returns the concatenated output Uint8Array
  */
-export const concat = (a_buffers: readonly Uint8Array[]): Uint8Array => {
+export const concat = (a_buffers: readonly Uint8Array[]): Uint8Array<ArrayBuffer> => {
 	const nb_out = a_buffers.reduce((c_bytes, atu8_each) => c_bytes + atu8_each.byteLength, 0);
 	const atu8_out = new Uint8Array(nb_out);
 	let ib_write = 0;

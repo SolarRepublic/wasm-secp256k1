@@ -1,8 +1,8 @@
-import type {RecoveryValue} from '../api/secp256k1-types';
+import type {RecoveryValue} from '../api/secp256k1-types.js';
 
 import {bytes_to_hex, hex_to_bytes, sha256, text_to_bytes} from '@blake.regalia/belt';
 
-import {WasmSecp256k1} from '../api/secp256k1';
+import {WasmSecp256k1} from '../api/secp256k1.js';
 
 const elem = <d_type extends HTMLElement=HTMLElement>(si_id: string) => document.getElementById(si_id) as d_type;
 

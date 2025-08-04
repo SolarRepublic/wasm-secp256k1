@@ -28,14 +28,14 @@ export interface Secp256k1 {
 	 * Generates a new private key using crypto secure random bytes and without modulo bias
 	 * @returns a new private key (32 bytes)
 	 */
-	gen_sk(): Uint8Array;
+	gen_sk(): Uint8Array<ArrayBuffer>;
 
 	/**
 	 * Asserts that the given private key is valid, throws otherwise
 	 * @param atu8_sk - the private key (32 bytes)
 	 * @returns the same `Uint8Array`
 	 */
-	valid_sk(atu8_sk: Uint8Array): Uint8Array;
+	valid_sk<w_buffer extends ArrayBufferLike>(atu8_sk: Uint8Array<w_buffer>): Uint8Array<w_buffer>;
 
 	/**
 	 * Computes the public key for a given private key
@@ -43,7 +43,7 @@ export interface Secp256k1 {
 	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
 	 * @returns the public key (compressed to 33 bytes by default, or 65 if uncompressed)
 	 */
-	sk_to_pk(atu8_sk: Uint8Array, b_uncompressed?: boolean): Uint8Array;
+	sk_to_pk(atu8_sk: Uint8Array, b_uncompressed?: boolean): Uint8Array<ArrayBuffer>;
 
 	/**
 	 * Signs the given message hash using the given private key.
@@ -68,7 +68,7 @@ export interface Secp256k1 {
 	 * @param xc_recovery - the recovery ID
 	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
 	 */
-	recover(atu8_signature: Uint8Array, atu8_hash: Uint8Array, xc_recovery: number, b_uncompressed?: boolean): Uint8Array;
+	recover(atu8_signature: Uint8Array, atu8_hash: Uint8Array, xc_recovery: number, b_uncompressed?: boolean): Uint8Array<ArrayBuffer>;
 
 	/**
 	 * ECDH key exchange. Computes a shared secret given a private key some public key
@@ -76,7 +76,7 @@ export interface Secp256k1 {
 	 * @param atu8_pk - the public key (33 or 65 bytes)
 	 * @returns the shared secret (32 bytes)
 	 */
-	ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array;
+	ecdh(atu8_sk: Uint8Array, atu8_pk: Uint8Array): Uint8Array<ArrayBuffer>;
 
 	/**
 	 * Tweak the given private key by adding to it
@@ -84,7 +84,7 @@ export interface Secp256k1 {
 	 * @param atu8_tweak - the tweak vector (32 bytes)
 	 * @returns the tweaked private key
 	 */
-	tweak_sk_add(atu8_sk: Uint8Array, atu8_tweak: Uint8Array): Uint8Array;
+	tweak_sk_add(atu8_sk: Uint8Array, atu8_tweak: Uint8Array): Uint8Array<ArrayBuffer>;
 
 	/**
 	 * Tweak the given private key by multiplying it
@@ -92,7 +92,7 @@ export interface Secp256k1 {
 	 * @param atu8_tweak - the tweak vector (32 bytes)
 	 * @returns the tweaked private key
 	 */
-	tweak_sk_mul(atu8_sk: Uint8Array, atu8_tweak: Uint8Array): Uint8Array;
+	tweak_sk_mul(atu8_sk: Uint8Array, atu8_tweak: Uint8Array): Uint8Array<ArrayBuffer>;
 
 	/**
 	 * Tweak the given public key by adding to it
@@ -101,7 +101,7 @@ export interface Secp256k1 {
 	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
 	 * @returns the tweaked public key
 	 */
-	tweak_pk_add(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array;
+	tweak_pk_add(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array<ArrayBuffer>;
 
 	/**
 	 * Tweak the given public key by multiplying it
@@ -110,7 +110,7 @@ export interface Secp256k1 {
 	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
 	 * @returns the tweaked public key
 	 */
-	tweak_pk_mul(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array;
+	tweak_pk_mul(atu8_pk: Uint8Array, atu8_tweak: Uint8Array, b_uncompressed?: boolean): Uint8Array<ArrayBuffer>;
 
 	/**
 	 * Accepts a compressed 33-byte or uncompressed 65-byte public key and allows user to change its format
@@ -118,7 +118,7 @@ export interface Secp256k1 {
 	 * @param b_uncompressed - optional flag to return the uncompressed (65 byte) public key
 	 * @returns the reformatted public key (unchanged if format is the same)
 	 */
-	reformat_pk(atu8_pk: Uint8Array, b_uncompressed?: boolean): Uint8Array;
+	reformat_pk(atu8_pk: Uint8Array, b_uncompressed?: boolean): Uint8Array<ArrayBuffer>;
 }
 
 /**
@@ -266,7 +266,7 @@ export const WasmSecp256k1 = async(
 	 * @param b_uncompressed - whether or not the result should be in compressed form (33 bytes) or not (65 bytes)
 	 * @returns the public key as a buffer
 	 */
-	const get_pk = (b_uncompressed=false): Uint8Array => {
+	const get_pk = (b_uncompressed=false): Uint8Array<ArrayBuffer> => {
 		// output length of public key
 		const nb_pk = b_uncompressed? ByteLens.PUBLIC_KEY_UNCOMPRESSED: ByteLens.PUBLIC_KEY_COMPRESSED;
 
@@ -291,7 +291,7 @@ export const WasmSecp256k1 = async(
 	 * @param atu8_sk - the private key (32 bytes)
 	 * @returns the valid private key, or throws if the caller somehow discovered an invalid sk
 	 */
-	const valid_sk = (atu8_sk: Uint8Array): Uint8Array => {
+	const valid_sk = <w_buffer extends ArrayBufferLike>(atu8_sk: Uint8Array<w_buffer>): Uint8Array<w_buffer> => {
 		// while using the private key, assert the length is valid and the point falls within curve order
 		if(with_sk(atu8_sk, () => ByteLens.PRIVATE_KEY as number !== atu8_sk.length || BinaryResult.SUCCESS !== g_wasm.ec_seckey_verify(ip_ctx, ip_sk))) {
 			throw Error(S_REASON_INVALID_SK);

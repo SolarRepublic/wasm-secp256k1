@@ -15,7 +15,7 @@ export interface WasmImports {
 	abort: () => void;
 	memcpy: <
 		nb_size extends ByteSize,
-	>(ip_dst: Pointer<nb_size>, ip_src: Pointer<nb_size>, nb_size: nb_size) => Uint8Array;
+	>(ip_dst: Pointer<nb_size>, ip_src: Pointer<nb_size>, nb_size: nb_size) => Uint8Array<ArrayBuffer>;
 	resize: (nb_size: ByteSize) => void;
 	write: (i_fd: FileDescriptor, ip_iov: Pointer<number>, nl_iovs: number, ip_written: Pointer<number>) => 0;
 }

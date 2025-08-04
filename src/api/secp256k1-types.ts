@@ -13,7 +13,7 @@ export type PointerSha256 = Pointer<'sha256'>;
 export type RecoveryValue = 0 | 1 | 2 | 3;
 
 export type SignatureAndRecovery = [
-	atu8_signature: Uint8Array,
+	atu8_signature: Uint8Array<ArrayBuffer>,
 	xc_recovery: RecoveryValue,
 ];
 
